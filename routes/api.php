@@ -19,3 +19,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
+
+// Route::controller(TaskController::class)->group(function(){
+
+//     Route::post('/web_task',"add_web_task");
+//     Route::post('/security_task',"add_security_task");
+//     Route::post('/desgin_task',"add_desgin_task");
+//     Route::get('/Tasks',"show_tasks")->name('/Tasks');
+//     Route::get('/task/edit/{id}',"edit_task")->name('task.edit');
+//     Route::get('/task/delete/{id}',"delete_task")->name('task.delete');
+//     Route::PUT('/task/update/{id}',"update_task")->name('task.update');
+// //Route::guard('managers')->post('/addmanager',[HomeController::class,"addManager"]);
+// });
+
+

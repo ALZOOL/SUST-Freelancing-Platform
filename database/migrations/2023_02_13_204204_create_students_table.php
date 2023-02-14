@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 return new class extends Migration
 {
@@ -14,17 +15,14 @@ return new class extends Migration
     public function up()
     {
         Schema::create('students', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id('student_id');
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('role');
-            $table->string('rank');
-            $table->string('points');
-            $table->string('description');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('username')->Unique();
+            $table->string('email')->Unique();
+            $table->string('avater')->default(0);
+            $table->string('role')->default(0);
             $table->string('password');
-            $table->rememberToken();
             $table->timestamps();
         });
     }

@@ -13,15 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('requests', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('client_id')->nullable();
-            $table->foreign('client_id')->references('id')->on('clients');
-            $table->string('title');
-            $table->string('category');
-            $table->string('description');
+        Schema::create('student_ranks', function (Blueprint $table) {
+            $table->id('student_id');
+            $table->foreign('student_id')->references('student_id')->on('students');
+            $table->char('rank',3);
+            $table->integer('points');
             $table->timestamps();
-            
         });
     }
 
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('requests');
+        Schema::dropIfExists('student_ranks');
     }
 };

@@ -25,7 +25,22 @@ class TaskController extends Controller
 
     public function show_tasks(){
         $users = DB::select('select * from tasks');
-        return view('ManagerDashboard.tasks',['users'=>$users]);
+        $data=[];
+
+        foreach ($users as $user) {
+            $data[]=[
+                'id'=>$user->id,
+                'title'=>$user->title,
+                'category'=>$user->category,
+                'description'=>$user->description,
+            ];
+        }
+        return response()->json([
+            'data'=>$data
+
+        ]);
+        //return response()->json(view('ManagerDashboard.tasks',['users'=>$users])->render());
+        //return  view('ManagerDashboard.tasks',['users'=>$users]);
         }
     //ADD NEW TASK 
     public function add_web_task(Request $request)
