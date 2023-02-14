@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 
+// <<<<<<< HEAD
 // Route::controller(TaskController::class)->group(function(){
 
 //     Route::post('/web_task',"add_web_task");
@@ -33,3 +34,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // });
 
 
+// =======
+// >>>>>>> da2e3b8fd9c8ea397fc4f7df9f070f8bfef2e619
+?>

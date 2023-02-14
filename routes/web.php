@@ -96,6 +96,7 @@ Route::controller(TaskController::class)->group(function(){
 });
 
 //ADD-EDIT-DELETE ROAD-MAPS
+//j
 
 Route::controller(RoadmapController::class)->group(function(){
     Route::post('/addRoadmap',"addRoadmap");
@@ -113,12 +114,12 @@ Route::controller(ProjectsRequestsController::class)->group(function(){
     Route::get('/project_request/accept/{id}',"accept_project_request")->name('project_request.accept');
     Route::get('/project_request/delete/{id}',"delete_request")->name('project_request.delete');
     //Route::get('/project_request/reject/{id}',"reject_project_request")->name('project_request.reject');
-    
+
 
 
 });
 
-//APPROVED PROJECTS 
+//APPROVED PROJECTS
 Route::controller(ApprovedProjectsController::class)->group(function(){
     Route::get('/Approved_projects',"show_accepted_requests")->name('/approved_projects');
     //Route::get('/Approved_projects',"show_approved_projects")->name('/approved_projectss');
@@ -128,10 +129,10 @@ Route::controller(ApprovedProjectsController::class)->group(function(){
 });
 
 
-//RANK-INTERVIEWS 
+//RANK-INTERVIEWS
 Route::controller(RankInterviewsController::class)->group(function(){
     Route::get('/Rank_interview',"rank_interview_requests")->name('/rank_interview');
-    //Route::get('/Rank_interview2',"rank_interview")->name('/rank_interview/upgrade');    
+    //Route::get('/Rank_interview2',"rank_interview")->name('/rank_interview/upgrade');
     Route::get('/rank_interview/accept/{id}',"accept_interview_request")->name('interview_request.accept');
     Route::PUT('/rank/update/{id}/{next_rank}',"upgrade_rank")->name('rank.upgrade');
     //Route::PUT('/rank.upgrade/{id}/{next_rank}');
@@ -141,31 +142,31 @@ Route::controller(RankInterviewsController::class)->group(function(){
 
 });
 
-//SUBMITTED-TASKS 
+//SUBMITTED-TASKS
 Route::controller(SubmittedTasksController::class)->group(function(){
     Route::get('/submitted_web',"show_web")->name('/show_web');
     Route::get('/submitted_security',"show_security")->name('/show_security');
     Route::get('/submitted_design',"show_design")->name('/show_design');
     Route::PUT('/submitted_web/custom/{student_name}/{id}',"custom")->name('custom');
     Route::PUT('/submitted_web/full/{student_name}/{id}',"full")->name('full');
-   
-   
+
+
 });
 
-//TEAM-REQUESTS 
+//TEAM-REQUESTS
 Route::controller(TeamRequestsController::class)->group(function(){
     Route::get('/Team_requests',"team_requests")->name('/team_requests');
     Route::get('/Team_requests/accepted',"accepted_team_requests")->name('/team_requestss');
-    Route::PUT('/team/accept/{id}',"accept_team")->name('accept.team');   
-   
+    Route::PUT('/team/accept/{id}',"accept_team")->name('accept.team');
+
 });
 
-//EDIT PROFILE 
+//EDIT PROFILE
 Route::controller(EditProfileController::class)->group(function(){
     //MANAGER PROFILE
     Route::get('/edit_profile/m/username/{id}',"manager_username")->name('/m_username.edit');
     Route::PUT('/edit_profile/m/password',"manager_password")->name('/m_password.edit');
     Route::PUT('/edit_profile/m/email',"manager_email")->name('/m_email.edit');
-    Route::PUT('/m/username/update/{id}',"m_username_update")->name('m_username.update');   
+    Route::PUT('/m/username/update/{id}',"m_username_update")->name('m_username.update');
    //###################
 });
