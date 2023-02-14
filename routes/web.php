@@ -5,13 +5,14 @@ use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\ManagerDashboardMovementController;
+//use App\Http\Controllers\ManagerDashboardMovementController;
 use App\Http\Controllers\ProjectsRequestsController;
 use App\Http\Controllers\ApprovedProjectsController;
 use App\Http\Controllers\RankInterviewsController;
 use App\Http\Controllers\SubmittedTasksController;
 use App\Http\Controllers\TeamRequestsController;
 use App\Http\Controllers\EditProfileController;
+use App\Http\Controllers\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,7 +33,7 @@ Auth::routes();
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/test_url', [HomeController::class, 'test_fun'])->name('test_route');
-Route::post('/addmanager',[HomeController::class,"addManager"]);
+
 
 //###########
 
@@ -43,6 +44,8 @@ Route::view('/create_web_task', 'ManagerDashboard.tasks.web');
 Route::view('/create_security_task', 'ManagerDashboard.tasks.security');
 Route::view('/create_design_task', 'ManagerDashboard.tasks.design');
 Route::view('/manager_profile', 'ManagerDashboard.profile.manager_profile');
+Route::view('/admin', 'admin')->name('admin');
+
 
 /* Route::controller(ManagerDashboardMovementController::class)->group(function(){
     //Route::get('/Projects_requests',"projects_requests")->name('/projects_requests');
@@ -62,6 +65,21 @@ Route::view('/manager_profile', 'ManagerDashboard.profile.manager_profile');
 
 });
  */
+
+//ADD-EDIT-DELETE MANAGERS
+
+Route::controller(AdminController::class)->group(function(){
+    Route::post('/addmanager',"addManager");
+    Route::get('/admin',"show_managers")->name('admin');
+    Route::get('/admin/system_managers/edit/{id}',"edit_system_managers")->name('system_managers.edit');
+    Route::PUT('/admin/system_managers/edit/update/{id}',"update_system_managers")->name('system_managers.update');
+    Route::get('/admin/delete/{id}',"delete_system_managers")->name('system_managers.delete');
+    
+
+
+});
+
+
 //ADD-EDIT-DELETE TASKS
 
 Route::controller(TaskController::class)->group(function(){

@@ -13,24 +13,24 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('interview_requests', function (Blueprint $table) {
+        Schema::create('tasks', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('student_name');
-            $table->string('role');
-            $table->string('current_rank');
-            $table->string('next_rank');
-            $table->timestamps();
-            
+            $table->string('title');
+            $table->string('category');
+            $table->string('description');
+            $table->string('filepath');
+            $table->string('points');
+            $table->timestamps();   
         });
     }
 
     /**
      * Reverse the migrations.
      *
-     * @return void
+     * @return void 
      */
     public function down()
     {
-        Schema::dropIfExists('interview_requests');
+        Schema::dropIfExists('tasks');
     }
 };
