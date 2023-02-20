@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreign('client_id')->references('client_id')->on('clients');
             $table->string('project_title');
             $table->string('project_description');
-            $table->string('project_file_path');
+            $table->string('project_file_path')->nullable();
             $table->timestamps();
         });
     }

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use App\Models\AcceptedRequest;
+use App\Models\Accepted_clients_request;
 class ProjectsRequestsController extends Controller
 {
     /**
@@ -26,27 +26,24 @@ class ProjectsRequestsController extends Controller
     //SHOW PROJECTS-REQUESTS
 
     public function show_projects_requests(){
-        $users = DB::select('select * from requests');
-        return view('ManagerDashboard.projects_requests',['users'=>$users]);
+        $users = DB::select('select * from client_project_requests');
+        return view('manager.projects_requests',['users'=>$users]);
         }
 
     //##################
 
     //ACCEPT-PROJECT-REQUEST
 
-    
-    
-
     public function accept_project_request($id)
     {
-        $result = DB::table('requests')->where('id',$id)->first();
-        $data=new AcceptedRequest;
+        $result = DB::table('client_project_requests')->where('id',$id)->first();
+        $data=new Accepted_clients_request;
         $data->id=$result->id;
         $data->client_id=$result->client_id;
         $data->title=$result->title;
         $data->category=$result->category;
         $data->description=$result->description;
-        DB::table('requests')->where('id',$id)->delete();
+        DB::table('client_project_requests')->where('id',$id)->delete();
         $data->save();
         
         return back();

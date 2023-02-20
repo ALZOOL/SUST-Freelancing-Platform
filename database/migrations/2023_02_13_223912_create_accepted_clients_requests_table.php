@@ -13,18 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('accepted_clietns_requests', function (Blueprint $table) {
+        Schema::create('accepted_clients_requests', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('client_id')->nullable();
-            $table->foreign('client_id')->references('id')->on('clients');
+            $table->unsignedBigInteger('client_id')->nullable();
+            $table->foreign('client_id')->references('client_id')->on('clients');
             $table->string('title');
-            $table->string('category');
-            $table->string('rank');
             $table->string('description');
-            $table->integer('frontend');
-            $table->integer('backend');
-            $table->integer('ui/ux');
-            $table->integer('security');
+            $table->string('project_file_path')->nullable();
             $table->timestamps();
             
         });
@@ -37,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('accepted_clietns_requests');
+        Schema::dropIfExists('accepted_clients_requests');
     }
 };

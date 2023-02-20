@@ -19,8 +19,7 @@ return new class extends Migration
             $table->boolean('team_leader')->default(1);
             $table->primary(['student_id', 'team_id']);
             $table->foreign('student_id')->references('student_id')->on('students');
-            $table->foreign('team_id')->references('id')->on('teams');
-
+            $table->foreign('team_id')->references('team_id')->on('teams');
         });
     }
 

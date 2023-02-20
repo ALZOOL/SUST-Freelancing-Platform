@@ -28,7 +28,7 @@ class RankInterviewsController extends Controller
     public function rank_interview_requests(){
         $users = DB::select('select * from interview_requests');
         $results = DB::select('select * from rank_interviews');//for showing accepted rank interviews
-        return view('ManagerDashboard.rank_interview')
+        return view('manager.rank_interview')
         ->with(compact('users'))
         ->with(compact('results'));
         }

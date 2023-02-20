@@ -63,8 +63,8 @@ class TeamRequestsController extends Controller
     //SHOW TEAMS-REQUESTS
 
     public function team_requests(){
-        $users = DB::select('select * from team_requests');
-        $teams = DB::select('select * from accepted_teams');
+        $users = DB::select('select * from student_join_projects');
+        $teams = DB::select('select * from projects_teams');
         return view('ManagerDashboard.team_requests')
         ->with(compact('users'))
         ->with(compact('teams'));
@@ -76,7 +76,7 @@ class TeamRequestsController extends Controller
 
     public function accept_team($id)
     {
-        $result = DB::table('team_requests')->where('id',$id)->first();
+        $result = DB::table('student_join_projects')->where('id',$id)->first();
         $data=new AcceptedTeam;
         //$data->id=$result->id;
         $data->project_id=$result->project_id;
@@ -87,7 +87,7 @@ class TeamRequestsController extends Controller
         $data->student_name=$result->student_name;
         $data->student_role=$result->student_role;
         
-        DB::table('team_requests')->where('id',$id)->delete();
+        DB::table('student_join_projects')->where('id',$id)->delete();
         $data->save();
         
         return back();

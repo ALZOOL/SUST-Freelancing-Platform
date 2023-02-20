@@ -14,17 +14,22 @@ return new class extends Migration
     public function up()
     {
         Schema::create('client_projects', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('client_id')->nullable();
-            $table->foreign('client_id')->references('id')->on('clients');
+            $table->id();
+            $table->unsignedBigInteger('client_id');
+            $table->foreign('client_id')->references('client_id')->on('clients');
             $table->string('title');
             $table->string('category');
             $table->string('description');
             $table->string('deadline');
-            $table->string('status');
+            $table->string('status')->nullable();
             $table->string('rank');
-            $table->unsignedInteger('team_id')->nullable();
-            $table->foreign('team_id')->references('id')->on('projects_teams');
+            $table->unsignedBigInteger('team_id')->nullable();
+            $table->foreign('team_id')->references('team_id')->on('projects_teams')->nullable();
+            $table->integer('frontend')->nullable();
+            $table->integer('backend')->nullable();
+            $table->integer('ui_ux')->nullable();
+            $table->integer('security')->nullable();
+            $table->integer('team_count');
             $table->timestamps();
             
         });

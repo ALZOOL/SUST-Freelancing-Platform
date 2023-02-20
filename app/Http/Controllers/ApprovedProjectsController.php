@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Project;
+use App\Models\Client_projects;
 class ApprovedProjectsController extends Controller
 {
     /**
@@ -26,8 +26,8 @@ class ApprovedProjectsController extends Controller
     //SHOW APPROVED-PROJECTS
 
     public function show_accepted_requests(){
-        $users = DB::select('select * from accepted_requests');
-        return view('ManagerDashboard.approved_projects',['users'=>$users]);
+        $users = DB::select('select * from accepted_clients_requests');
+        return view('manager.approved_projects',['users'=>$users]);
         }
 
     //##################
@@ -36,7 +36,7 @@ class ApprovedProjectsController extends Controller
     
     public function publish(Request $request)
     {
-        $data=new Project;
+        $data=new Client_projects;
         $data->client_id=$request->client_id;
         $data->title=$request->title;
         $data->category=$request->category;

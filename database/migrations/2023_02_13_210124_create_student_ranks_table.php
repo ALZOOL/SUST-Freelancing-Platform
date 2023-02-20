@@ -14,10 +14,11 @@ return new class extends Migration
     public function up()
     {
         Schema::create('student_ranks', function (Blueprint $table) {
-            $table->id('student_id');
-            $table->foreign('student_id')->references('student_id')->on('students');
-            $table->char('rank',3);
-            $table->integer('points');
+          
+            $table->unsignedBigInteger('student_id');
+            $table->primary('student_id')->references('student_id')->on('students');
+            $table->char('rank',3)->default('F');
+            $table->integer('points')->default(0);;
             $table->timestamps();
         });
     }

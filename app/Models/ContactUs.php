@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class AcceptedRequest extends Authenticatable
+class ContactUs extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
  
@@ -17,12 +17,11 @@ class AcceptedRequest extends Authenticatable
      *
      * @var array<int, string>
      */
+    protected $table = 'contact_us';
     protected $fillable = [
-        'client_id',        
-        'title',
-        'category',
+        'client_id',
+        'client_email',
         'description',
-        
     ];
 
     /**

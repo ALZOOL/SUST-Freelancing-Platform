@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('teams', function (Blueprint $table) {
-            $table->id();
+            $table->id('team_id');
             $table->string('team_name');
             $table->string('invitation_link')->unique();
             $table->timestamps();

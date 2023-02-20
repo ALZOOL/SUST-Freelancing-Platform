@@ -14,14 +14,9 @@ return [
     */
 
     'defaults' => [
-        'guard' => 'admin',
-        'passwords' => 'users',
+        'guard' => 'student',
+        'passwords' => 'student',
     ],
-    'yo' => [
-        'guard' => 'admin',
-        'passwords' => 'users',
-    ],
-    
 
     /*
     |--------------------------------------------------------------------------
@@ -41,14 +36,18 @@ return [
     */
 
     'guards' => [
-        'web' => [
+        'student' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'student',
         ],
-        'admin' => [
+        'manager' => [
             'driver' => 'session',
-            'provider' => 'managers',
+            'provider' => 'manager',
         ],
+        'client' => [
+            'driver' => 'session',
+            'provider' => 'client',
+        ]
     ],
 
     /*
@@ -69,17 +68,19 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        'student' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+            'model' => App\Models\Student::class,
         ],
-
-        'managers' => [
+        'manager' => [
             'driver' => 'eloquent',
             'model' => App\Models\Manager::class,
-            //'model' => App\Models\User::class,
         ],
-        
+        'client' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Client::class,
+        ],
+
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
@@ -104,12 +105,6 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => 'password_resets',
-            'expire' => 60,
-            'throttle' => 60,
-        ],
-        'managers' => [
-            'provider' => 'managers',
             'table' => 'password_resets',
             'expire' => 60,
             'throttle' => 60,

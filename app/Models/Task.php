@@ -17,10 +17,17 @@ class Task extends Authenticatable
      *
      * @var array<int, string>
      */
+    protected $table = 'tasks';
+    protected $primaryKey = 'id';
     protected $fillable = [
-        'name',
+        'title',
+        'level',
         'category',
         'description',
+        'level',
+        'rank',
+        'file_path',
+        'points',
     ];
 
     /**

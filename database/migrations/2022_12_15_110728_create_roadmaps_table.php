@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('roadmaps', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('manager_id')->nullable();
+            $table->unsignedBigInteger('manager_id')->nullable();
             $table->foreign('manager_id')->references('id')->on('managers');
             $table->string('title');
             $table->string('category');

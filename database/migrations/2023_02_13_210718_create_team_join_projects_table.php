@@ -14,12 +14,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('team_join_projects', function (Blueprint $table) {
-            $table->id();
+            //$table->id();
             $table->unsignedBigInteger('project_id');
-            $table->foreign('project_id')->references('project_id')->on('projects')->onDelete('cascade');
-            $table->string('project_name');
+            $table->foreign('project_id')->references('id')->on('client_projects')->onDelete('cascade');
+            $table->string('project_title');
             $table->unsignedBigInteger('team_id');
-            $table->foreign('team_id')->references('id')->on('teams')->onDelete('cascade');
+            $table->foreign('team_id')->references('team_id')->on('teams')->onDelete('cascade');
             $table->timestamps();
         });
     }

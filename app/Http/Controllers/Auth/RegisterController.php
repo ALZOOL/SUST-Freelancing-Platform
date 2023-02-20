@@ -77,7 +77,7 @@ class RegisterController extends Controller
             ]);
         }
 
-        if($data['role']=='1')
+        if($data['role']=='Manager')
         {
             return Manager::create([
                 'name' => $data['name'],
@@ -88,7 +88,7 @@ class RegisterController extends Controller
             ]);
         }
 
-        if($data['role' ]=='2')
+        if($data['role' ]=='Admin')
         {
             return Manager::create([
                 'name' => $data['name'],

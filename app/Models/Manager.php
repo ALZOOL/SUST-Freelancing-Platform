@@ -11,13 +11,17 @@ use Laravel\Sanctum\HasApiTokens;
 class Manager extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-    protected $guard =['managers'];
+    //protected $guard =['managers'];
   
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
+    protected $table = 'managers';
+    protected $primaryKey = 'id';
+
+    protected $guarded=['manager'] ;
     protected $fillable = [
         'name',
         'email',

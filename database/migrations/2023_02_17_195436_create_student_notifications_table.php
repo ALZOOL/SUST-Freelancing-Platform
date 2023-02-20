@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 return new class extends Migration
 {
@@ -13,11 +14,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('projects_team_members', function (Blueprint $table) {
+        Schema::create('student_notifications', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('student_id');
-            $table->unsignedBigInteger('team_id');
-            $table->foreign('student_id')->references('student_id')->on('students');
-            $table->foreign('team_id')->references('team_id')->on('projects_teams')->onDelete('cascade');
+            $table->foreign('student_id')->references('student_id')->on('students')->onDelete('cascade');
+            $table->unsignedBigInteger('message_id');
+            $table->foreign('message_id')->references('id')->on('messages')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -29,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('projects_team_members');
+        Schema::dropIfExists('student_notifications');
     }
 };
