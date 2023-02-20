@@ -11,6 +11,18 @@ use Laravel\Sanctum\HasApiTokens;
 class Client_projects extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    public function projectsTeam()
+{
+    return $this->hasOne(ProjectsTeam::class);
+}
+
+// ProjectsTeam model
+public function clientProject()
+{
+    return $this->belongsTo(ClientProject::class);
+}
+
     protected $table = 'client_projects';
     protected $primaryKey = 'id';
     /**

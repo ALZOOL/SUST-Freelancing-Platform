@@ -902,8 +902,7 @@ class ManagerController extends Controller
         $data_2->message_id=8;
         
         DB::table('rank_interviews')->where('id',$id)->delete();
-        $data_2->save();
-        
+        $data_2->save(); 
         return back();
 
     }
@@ -920,9 +919,12 @@ class ManagerController extends Controller
         
         }
 
+    
+
 
     //ACCEPT-TEAM
     //single student
+    
     public function accept_single_student($id)
     {
         $result = DB::table('student_join_projects')->where('id',$id)->first();

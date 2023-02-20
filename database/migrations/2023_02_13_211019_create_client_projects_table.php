@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('status')->nullable();
             $table->string('rank');
             $table->unsignedBigInteger('team_id')->nullable();
-            $table->foreign('team_id')->references('team_id')->on('projects_teams')->nullable();
+            $table->foreign('team_id')->references('id')->on('projects_teams')->nullable();
             $table->integer('frontend')->nullable();
             $table->integer('backend')->nullable();
             $table->integer('ui_ux')->nullable();
