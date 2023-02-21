@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<h1>edit manager info as admin </h1>
+<h1>edit ayman manager info as admin </h1>
 <br><br>
 <h1>info edition</h1>
 <br>
