@@ -313,7 +313,15 @@ Route::controller(ManagerController::class)->group(function(){
 
     //TEAM REQUESTS AND TEAMS JOINING
     Route::get('/Team_requests',"team_requests")->name('/team_requests');
-    //Route::get('/Team_requests/accepted',"accepted_team_requests")->name('/team_requests');
+    Route::get('/Team_requests/accepted',"accepted_team_requests")->name('/team_requests');
+
+    Route::post('/add_student_to_project',"add_student_to_project")->name('add_student_to_project');
+    
+    Route::get('/team_join_projects',"team_join_projects")->name('team_join_projects');
+    Route::post('/add_team_to_project',"add_team_to_project")->name('add_team_to_project');
+    
+    
+   
     Route::PUT('/team/accept_single/{id}',"accept_single_student")->name('accept_single.team');
     Route::PUT('/team/accept_full/{id}',"accept_full_team")->name('accept_full.team');
     

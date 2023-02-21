@@ -54,7 +54,7 @@ class ClientController extends Controller
             'password' => 'required',
         ]);
         if (Auth::guard('client')->attempt(['email' => $request->email, 'password' => $request->password])) {
-            //$request->session()->regenerate();
+            $request->session()->regenerate();
             return response()->json(['ok' => "login successfully"], 200);
 
             //return view('client.home');
@@ -95,7 +95,6 @@ class ClientController extends Controller
     if ($request->hasFile('project_file')) {
         $path = $request->file('project_file')->store('uploads');
     }
-
     $projectRequest = new ClientProjectRequest;
     $projectRequest->client_id = $id;
     $projectRequest->project_title = $request->project_title;

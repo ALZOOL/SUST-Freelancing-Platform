@@ -604,10 +604,11 @@ $validatedData = $request->validate([
 $invitation_link = Str::random(10);
 $team = Team::create([
     'team_name' => $validatedData['team_name'],
-    'invitation_link' => $invitation_link
+    'invitation_link' => $invitation_link,
+    'team_leader'=>$student_id
 ]);
 $users = Auth()->id();
-$team->users()->attach($users,['team_leader' => 1 ]);
+$team->users()->attach($users);
 }
 // public function edit_team_action(Request $request)
 // {

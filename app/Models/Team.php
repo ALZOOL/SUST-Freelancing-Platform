@@ -13,8 +13,7 @@ class Team extends Model
     public function users()
     {
         //return $this->belongsToMany(Student::class);
-        return $this->belongsToMany(Student::class, 'student_teams', 'team_id', 'student_id')
-            ->withPivot('team_leader');
+        return $this->belongsToMany(Student::class, 'student_teams', 'team_id', 'student_id');
     }
 
     public function studentTeams()
