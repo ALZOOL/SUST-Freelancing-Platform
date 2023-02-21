@@ -910,17 +910,136 @@ class ManagerController extends Controller
     //SHOW TEAMS-REQUESTS
 
     public function team_requests(){
-        $users = DB::select('select * from student_join_projects');
-        $teams = DB::select('select * from team_join_projects');
-        
-        return view('manager.team_requests')
-        ->with(compact('users'))
-        ->with(compact('teams'));
+        // $users = DB::select('select * from student_join_projects');
+        // $teams = DB::select('select * from team_join_projects');
+        $studentRequests = DB::table('student_join_projects')->get();
+        echo $studentRequests;
+        return view('manager.accept_student', compact('studentRequests'));
+        // return view('manager.team_requests')
+        // ->with(compact('users'))
+        // ->with(compact('teams'));
         
         }
 
     
+//mahdi farfara
+public function add_student_to_project(Request $request)
+{
+    $manager_id = Auth::guard('manager')->user()->id;
 
+    $validatedData = $request->validate([
+        'project_id' => 'required|integer',
+        'student_id' => 'required|integer',
+    ]);
+
+    $project = Client_projects::findOrFail($validatedData['project_id']);
+
+    // check if the student is already a member of the team
+    $teamMembers = ProjectsTeamMember::where('team_id', $project->team_id)->get();
+    $isMember = $teamMembers->contains('student_id', $validatedData['student_id']);
+    if ($isMember) {
+        return response()->json([
+            'message' => 'The student is already a member of the team'
+        ], 400);
+    }
+
+    // check if the team is already full
+    $teamCount = $project->team_count;
+    $currentTeamCount = $teamMembers->count();
+    if ($currentTeamCount >= $teamCount) {
+        return response()->json([
+            'message' => 'The team is already full'
+        ], 400);
+    }
+
+    if ($project->team_id) {
+        $team = ProjectsTeam::findOrFail($project->team_id);
+    } else {
+        $team = new ProjectsTeam();
+        $team->project_id = $project->id;
+        $team->manager_id = $manager_id;
+        $team->save();
+        $project->team_id = $team->id;
+        $project->save();
+    }
+    $student = Student::findOrFail($validatedData['student_id']);
+    $teamMember = new ProjectsTeamMember();
+    $teamMember->team_id = $team->id;
+    $teamMember->student_id = $student->student_id;
+    $teamMember->save();
+
+    return response()->json([
+        'message' => 'Student added to the project team successfully',
+        'team_member_id' => $teamMember->id
+    ], 201);
+}
+
+///end of add single student to projetc with create team 
+
+///start of add a team or accept a team to project
+
+public function team_join_projects(){
+    $studentRequests = DB::table('team_join_projects')->get();
+    //echo $studentRequests;
+    return view('manager.accept_team', compact('studentRequests'));    
+    }
+
+
+public function add_team_to_project(Request $request)
+{
+    $validatedData = $request->validate([
+        'team_id' => 'required|integer',
+        'project_id' => 'required|integer',
+    ]);
+
+    $manager_id = Auth::guard('manager')->user()->id;
+
+    // Check if the project already has a team
+    $project = Client_projects::findOrFail($validatedData['project_id']);
+    if ($project->team_id) {
+        return response()->json([
+            'error' => 'The project already has a team.',
+        ], 422);
+    } else {
+        // Find the team members
+        $team_members = DB::table('student_teams')
+            ->where('team_id', $validatedData['team_id'])
+            ->get();
+
+        if (count($team_members) < 1) {
+            return response()->json([
+                'error' => 'The team does not have any members.',
+            ], 422);
+        }
+        // Create the project team
+        $team = new ProjectsTeam();
+        $team->project_id = $validatedData['project_id'];
+        $team->manager_id = $manager_id;
+        $team->save();
+
+        //Add team members to the project team
+        foreach ($team_members as $team_member) {
+            $projectsTeamMember = new ProjectsTeamMember();
+            $projectsTeamMember->team_id = $team->id;
+            $projectsTeamMember->student_id = $team_member->student_id;
+            $projectsTeamMember->save();
+        }
+
+        // Update the project with the team id
+        $project->team_id = $team->id;
+        $project->save();
+    }
+
+    return response()->json([
+        'message' => 'Team request accepted successfully',
+        'team_id' => $team->id,
+    ], 201);
+}
+
+////end of team join project 
+
+
+        //mahdi farfra
 
     //ACCEPT-TEAM
     //single student
@@ -969,6 +1088,7 @@ class ManagerController extends Controller
         
     }
     //#######################################
+    
 
     //full team
     public function accept_full_team($id)
