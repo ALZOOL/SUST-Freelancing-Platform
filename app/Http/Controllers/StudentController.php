@@ -493,7 +493,6 @@ public function student_project_request(Request $request){
                         'project_id' => $project_id,
                         'project_title' => $project->title,
                         'client_id'=> $project->client_id,
-                        'client_email'=> $clientinfo->email,
                         'student_id' => $user->student_id,
                         'student_name' => $user->username,
                         'student_role'=>$user->role
@@ -509,43 +508,90 @@ public function student_project_request(Request $request){
 }}
     }//end of user join project indevitual 
      //end of StudentJoinProjects
+     //start of team send join project request 
+     public function team_project_request(Request $request)
+     {
+         $student_id = Auth::guard('student')->user()->student_id;
+         $user = Auth::user();
+         $project_id = $request->project_id;
+         $project = Client_projects::find($project_id);
+     
+         // Check if the current student has created a team
+         
+         $team = DB::table('student_teams')->where('student_id', $student_id)->first();
+         $team_leader = DB::table('teams')->where('team_id', $team->team_id)->first();
+     
+         if (!$team) {
+             return response()->json(['error' => "You have not created a team. Please create a team first"], 403);
+         }
+         
+         // Check if the team has already sent a request to join this project
+         $team_join_project = DB::table('team_join_projects')
+                                 ->where('team_id', $team->team_id)
+                                 ->where('project_id', $project_id)
+                                 ->first();
+         
+         if ($team_join_project) {
+             return response()->json(['error' => "You have already sent a request to join this project"], 403);
+         }
+     
+         // Allow the team to send a request to join a new project
+         $existing_team_join_projects = DB::table('team_join_projects')
+                                 ->where('team_id', $team->team_id)
+                                 ->get();
+     
+         foreach ($existing_team_join_projects as $existing_team_join_project) {
+             if ($existing_team_join_project->project_id == $project_id) {
+                 return response()->json(['error' => "You have already sent a request to join this project"], 403);
+             }
+         }
+     
+         $request = TeamJoinProject::create([
+             'project_id' => $project_id,
+             'project_title' => $project->title,
+             'team_id' => $team->team_id,
+         ]);
+     
+         return response()->json(['ok' => "Your request has been sent successfully"], 200);
+     }
 
+     //end of team send join project request 
     //good but organize it 
-public function team_project_request(Request $request){
-$student_id = Auth::guard('student')->user()->student_id;
-$user = Auth::user();
-$project_id = $request->project_id;
-$project = Client_projects::find($project_id);
-$teams = DB::table('student_teams')->where('student_id', $student_id)->get();
-foreach($teams as $team){$team_leader=$team->team_leader;$team_id_exist=$team->team_id;}
-$team_projects = DB::table('team_join_projects')->where('team_id', $team_id_exist)->get();
-//echo $team_projects;
-if ($team_projects->isEmpty()){
-//echo $temp;
-if($teams->count() > 0){
-    if($team_leader == 1 ){
-    $request = TeamJoinProject::create([
-        'project_id' => $project_id,
-        'project_title' => $project->title,
-        'team_id' => $teams->first()->team_id,
-    ]);
-    //echo $request;
+// public function team_project_request(Request $request){
+// $student_id = Auth::guard('student')->user()->student_id;
+// $user = Auth::user();
+// $project_id = $request->project_id;
+// $project = Client_projects::find($project_id);
+// $teams = DB::table('student_teams')->where('student_id', $student_id)->get();
+// foreach($teams as $team){$team_leader=$team->team_leader;$team_id_exist=$team->team_id;}
+// $team_projects = DB::table('team_join_projects')->where('team_id', $team_id_exist)->get();
+// //echo $team_projects;
+// if ($team_projects->isEmpty()){
+// //echo $temp;
+// if($teams->count() > 0){
+//     if($team_leader == 1 ){
+//     $request = TeamJoinProject::create([
+//         'project_id' => $project_id,
+//         'project_title' => $project->title,
+//         'team_id' => $teams->first()->team_id,
+//     ]);
+//     //echo $request;
  
-    //$request->save();
+//     //$request->save();
 
-    return redirect()->route('home')->with('success', 'Your request has been sent successfully');
-}
-} else{
-    return redirect()->route('home')->with('error', 'You are not on a team');
-}
-}
-}
+//     return redirect()->route('home')->with('success', 'Your request has been sent successfully');
+// }
+// } else{
+//     return redirect()->route('home')->with('error', 'You are not on a team');
+// }
+// }
+// }
 
 //end of user request to join to project 
 
 
 
-//start of projects function
+//end  of projects function
 
 
 

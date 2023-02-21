@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ClientProjectRequest;
 use App\Models\Client_projects;
 use App\Models\ContactUs;
+use App\Models\Star;
+use App\Models\ProjectsTeamMember;
+use App\Models\Student;
 
 
 class ClientController extends Controller
@@ -75,40 +78,6 @@ class ClientController extends Controller
         //return redirect('client/login');
     }
 
-    public function client_project_requetses()
-    {
-        $data['title'] = 'Login';
-        return view('client.client_project_requets', $data);
-    }
-
-    public function client_project_requets(Request $request)
-{
-    $id = Auth::guard('client')->user()->client_id;
-
-    $request->validate([
-        'project_title' => 'required',
-        'project_description' => 'required',
-        'project_file' => 'nullable|file|mimes:pdf'
-    ]);
-
-    $path = null;
-    if ($request->hasFile('project_file')) {
-        $path = $request->file('project_file')->store('uploads');
-    }
-    $projectRequest = new ClientProjectRequest;
-    $projectRequest->client_id = $id;
-    $projectRequest->project_title = $request->project_title;
-    $projectRequest->project_description = $request->project_description;
-    $projectRequest->project_file_path = $path;
-    $projectRequest->save();
-    return response()->json(['ok' => "Project request submitted successfully."], 200);
-    
-
-    //return redirect()->back()->with('success', '');
-}
-
-
-
 public function getProjects()
 {
     $client_id = Auth::guard('client')->id();
@@ -118,6 +87,67 @@ public function getProjects()
         ->get();
         //->with(['team.members'])
     return $projects;
+}
+
+public function getProjectsAndTeams() {
+    $client_id = Auth::guard('client')->id();
+    $client_projects = Client_projects::where('client_id', $client_id)->get();
+
+    $data = [];
+    foreach ($client_projects as $project) {
+        $team_members = ProjectsTeamMember::where('team_id', $project->team_id)->get();
+        $team_members_data = [];
+        foreach ($team_members as $team_member) {
+            $student = Student::find($team_member->student_id);
+            $team_members_data[] = [
+                'id' => $student->student_id,
+                'first_name' => $student->first_name,
+                'last_name' => $student->last_name,
+                'email' => $student->email,
+                // add more fields as needed
+            ];
+        }
+
+        $data[] = [
+            'project_title' => $project->title,
+            'team_id' => $project->team_id,
+            'team_members' => $team_members_data
+        ];
+    }
+
+    return response()->json(['data' => $data], 200);
+}
+
+public function client_project_requetses()
+{
+    $data['title'] = 'Login';
+    return view('client.client_project_requets', $data);
+}
+
+public function client_project_requets(Request $request)
+{
+$id = Auth::guard('client')->user()->client_id;
+
+$request->validate([
+    'project_title' => 'required',
+    'project_description' => 'required',
+    'project_file' => 'nullable|file|mimes:pdf'
+]);
+
+$path = null;
+if ($request->hasFile('project_file')) {
+    $path = $request->file('project_file')->store('uploads');
+}
+$projectRequest = new ClientProjectRequest;
+$projectRequest->client_id = $id;
+$projectRequest->project_title = $request->project_title;
+$projectRequest->project_description = $request->project_description;
+$projectRequest->project_file_path = $path;
+$projectRequest->save();
+return response()->json(['ok' => "Project request submitted successfully."], 200);
+
+
+//return redirect()->back()->with('success', '');
 }
 
 public function contacts_us()
@@ -142,5 +172,42 @@ public function contact_us(Request $request)
         //return redirect()->back()->with('success', 'Your message has been sent. We will get back to you soon!');
     }
 
+    //start of star function :
+    public function showstar()
+{
+    $client_id = Auth::guard('client')->id();
+    //$projects= DB::table('client_projects')->where('client_id', $client_id)->first();
 
+    $projects = DB::table('client_projects')
+            ->join('projects_teams', 'client_projects.team_id', '=', 'projects_teams.id')
+            ->select('client_projects.id', 'projects_teams.id as team_id')->where('client_id', $client_id)
+            ->get();
+   return view('client.starshow', compact('projects'));
+}
+
+public function stars(Request $request)
+{
+    $client_id = Auth::guard('client')->id();
+
+    // Check if the client has already given a star to this team
+    $existing_star = Star::where('client_id', $client_id)
+                          ->where('team_id', $request->team_id)
+                          ->first();
+    if ($existing_star) {
+        return response()->json(['error' => "You have already given a star to this team."], 422);
+    }
+
+    $teamMembers = DB::table('projects_team_members')->where('team_id', $request->team_id)->get();
+
+    foreach ($teamMembers as $teamMember) {
+        $star = Star::create([
+            'client_id' => $client_id,
+            'project_id' => $request->project_id,
+            'team_id' => $request->team_id,
+            'student_id' => $teamMember->student_id,
+        ]);
+    }
+
+    return response()->json(['ok' => "Stars added successfully!"], 200);
+}
 }

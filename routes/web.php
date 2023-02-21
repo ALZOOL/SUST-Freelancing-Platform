@@ -197,8 +197,18 @@ Route::controller(ClientController::class)->group(function(){
     Route::post('client/client_project_requets','client_project_requets')->name('client_project.request');
     Route::get('client/getProjects','getProjects')->name('getProjects');
 
+    Route::get('client/getProjectsAndTeams','getProjectsAndTeams')->name('getProjectsAndTeams');
+
+    
+
     Route::get('client/contacts_us', 'contacts_us')->name('contacts_us');
     Route::post('client/contact_us', 'contact_us')->name('contact_us.store');
+    
+    Route::get('client/showstar', 'showstar')->name('showstar');
+    Route::post('client/stars_store', 'stars')->name('stars.store');
+
+
+    
    
 });
 //###################
