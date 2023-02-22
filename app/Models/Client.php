@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 class Client extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+    
 
     protected $table = 'clients';
     protected $primaryKey = 'client_id';

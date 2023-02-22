@@ -13,6 +13,7 @@ use App\Models\ContactUs;
 use App\Models\Star;
 use App\Models\ProjectsTeamMember;
 use App\Models\Student;
+use Laravel\Sanctum\HasApiTokens;
 
 
 class ClientController extends Controller
@@ -22,6 +23,27 @@ class ClientController extends Controller
         return view('client.register');
     }
 
+    // public function register_action(Request $request)
+    // {
+    //     $request->validate([
+    //         'first_name' => 'required',
+    //         'last_name' => 'required',
+    //         'email' => 'required|unique:clients',
+    //         'password' => 'required',
+    //         'password_confirm' => 'required|same:password',
+    //     ]);
+    //     $Client = new Client([
+    //         'first_name' => $request->first_name,
+    //         'last_name' => $request->last_name,
+    //         'email' => $request->email,
+    //         'company_name' => $request->company_name,
+    //         'company_email' => $request->company_email,
+    //         'password' => Hash::make($request->password),
+    //     ]);
+    //     $Client->save();
+    //     return response()->json(['ok' => "registration successfully complete"], 200);
+    //     //return redirect()->route('login')->with('success', 'Registration success. Please login!');
+    // }
     public function register_action(Request $request)
     {
         $request->validate([
@@ -30,7 +52,12 @@ class ClientController extends Controller
             'email' => 'required|unique:clients',
             'password' => 'required',
             'password_confirm' => 'required|same:password',
+        ], [
+            'required' => 'Please fill the :attribute field',
+            'unique' => 'This :attribute is already used',
+            'same' => 'The :attribute and :other must match',
         ]);
+    
         $Client = new Client([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -40,15 +67,32 @@ class ClientController extends Controller
             'password' => Hash::make($request->password),
         ]);
         $Client->save();
-        return response()->json(['ok' => "registration successfully complete"], 200);
-
-        //return redirect()->route('login')->with('success', 'Registration success. Please login!');
+    
+        return response()->json(['success' => 'Registration completed successfully'], 200);
     }
+    
     public function login()
     {
         $data['title'] = 'Login';
         return view('client.login', $data);
     }
+
+    // public function login_action(Request $request)
+    // {
+    //     $request->validate([
+    //         'email' => 'required',
+    //         'password' => 'required',
+    //     ]);
+    //     if (Auth::guard('client')->attempt(['email' => $request->email, 'password' => $request->password])) {
+    //         $request->session()->regenerate();
+    //         return response()->json(['ok' => "login successfully"], 200);
+    //     }
+
+    //     else{
+    //         return response()->json(['ok' => "wrong username or password"], 200);
+    //     }
+    // }
+
 
     public function login_action(Request $request)
     {
@@ -57,18 +101,61 @@ class ClientController extends Controller
             'password' => 'required',
         ]);
         if (Auth::guard('client')->attempt(['email' => $request->email, 'password' => $request->password])) {
-            $request->session()->regenerate();
-            return response()->json(['ok' => "login successfully"], 200);
-
-            //return view('client.home');
-            //return redirect()->intended('client.home');
+            $user = Client::where('email', $request->email)->first();
+            $token=$user->createToken('API Token');
+            return response()->json([
+                "user" => $user,
+                "token" => $token->plainTextToken
+            ]);
+            //return response()->json(['ok' => "login successfully"], 200);
         }
 
-        return back()->withErrors([
-            'password' => 'Wrong username or password',
-        ]);
+        else{
+            return response()->json(['ok' => "wrong username or password"], 200);
+        }
     }
 
+    public function getProjects()
+{
+    // Check for authorization token
+    $token = request()->header('Authorization');
+    if (!$token) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    // Validate authorization token with client guard
+    if (!Auth::guard('client')->check()) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
+
+    // Get projects for authenticated client
+    $client_id = Auth::guard('client')->id();
+    $projects = Client_projects::select('title', 'category', 'description', 'status')
+        ->where('client_id', $client_id)
+        ->get();
+
+        return response()->json([
+            "projects" => $projects,
+        ]);
+}
+    // public function login_action(Request $request)
+    // {
+    //     $request->validate([
+    //         'email' => 'required',
+    //         'password' => 'required',
+    //     ]);
+    
+    //     $credentials = $request->only('email', 'password');
+    
+    //     if (Auth::guard('client')->attempt($credentials)) {
+    //         $user = Auth::guard('client')->user();
+    //         $token = $user->createToken('Token Name')->accessToken;
+    //         $request->session()->regenerate();
+    //         return response()->json(['user' => $user, 'token' => $token], 200);
+    //     } else {
+    //         return response()->json(['error' => "wrong username or password"], 401);
+    //     }
+    // }
+    
     public function logout(Request $request)
     {
         Auth::guard('client')->logout();
@@ -78,18 +165,27 @@ class ClientController extends Controller
         //return redirect('client/login');
     }
 
-public function getProjects()
-{
-    $client_id = Auth::guard('client')->id();
+// public function getProjects()
+// {
+//     $client_id = Auth::guard('client')->id();
 
-    $projects = Client_projects::select('title', 'category', 'description', 'status')
-        ->where('client_id', $client_id)
-        ->get();
-        //->with(['team.members'])
-    return $projects;
-}
+//     $projects = Client_projects::select('title', 'category', 'description', 'status')
+//         ->where('client_id', $client_id)
+//         ->get();
+//         //->with(['team.members'])
+//     return $projects;
+// }
 
 public function getProjectsAndTeams() {
+    $token = request()->header('Authorization');
+    if (!$token) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    // Validate authorization token with client guard
+    if (!Auth::guard('client')->check()) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
+    
     $client_id = Auth::guard('client')->id();
     $client_projects = Client_projects::where('client_id', $client_id)->get();
 
@@ -126,6 +222,14 @@ public function client_project_requetses()
 
 public function client_project_requets(Request $request)
 {
+    $token = request()->header('Authorization');
+    if (!$token) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    // Validate authorization token with client guard
+    if (!Auth::guard('client')->check()) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
 $id = Auth::guard('client')->user()->client_id;
 
 $request->validate([
@@ -158,6 +262,14 @@ public function contacts_us()
 
 public function contact_us(Request $request)
     {
+        $token = request()->header('Authorization');
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        if (!Auth::guard('client')->check()) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
         $request->validate([
             'description' => 'required'
         ]);
@@ -172,9 +284,16 @@ public function contact_us(Request $request)
         //return redirect()->back()->with('success', 'Your message has been sent. We will get back to you soon!');
     }
 
-    //start of star function :
-    public function showstar()
-{
+    //start of star function : // here the user give star to the team 
+    public function showstar(){
+        $token = request()->header('Authorization');
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        if (!Auth::guard('client')->check()) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
     $client_id = Auth::guard('client')->id();
     //$projects= DB::table('client_projects')->where('client_id', $client_id)->first();
 
@@ -182,11 +301,21 @@ public function contact_us(Request $request)
             ->join('projects_teams', 'client_projects.team_id', '=', 'projects_teams.id')
             ->select('client_projects.id', 'projects_teams.id as team_id')->where('client_id', $client_id)
             ->get();
-   return view('client.starshow', compact('projects'));
+            return response()->json([
+                "projects" => $projects,
+            ]);
+   //return view('client.starshow', compact('projects'));
 }
 
-public function stars(Request $request)
-{
+public function stars(Request $request){
+    $token = request()->header('Authorization');
+    if (!$token) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    // Validate authorization token with client guard
+    if (!Auth::guard('client')->check()) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
     $client_id = Auth::guard('client')->id();
 
     // Check if the client has already given a star to this team
@@ -207,7 +336,6 @@ public function stars(Request $request)
             'student_id' => $teamMember->student_id,
         ]);
     }
-
     return response()->json(['ok' => "Stars added successfully!"], 200);
 }
 }

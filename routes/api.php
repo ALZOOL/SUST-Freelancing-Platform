@@ -40,7 +40,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
     Route::get('client/contacts_us', 'contacts_us')->name('contacts_us');
     Route::post('client/contact_us', 'contact_us')->name('contact_us.store');
-   
+
+    Route::get('client/getProjectsAndTeams','getProjectsAndTeams')->name('getProjectsAndTeams');
+    Route::get('client/showstar', 'showstar')->name('showstar');
+    Route::post('client/stars_store', 'stars')->name('stars.store');
 });
 
 

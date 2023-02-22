@@ -15,10 +15,6 @@ use App\Models\StudentSolvedTask;
 use App\Models\TaskSolution;
 use App\Models\Task;
 use App\Models\Star;
-
-
-
-//use App\StudentProjectRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -34,8 +30,7 @@ class StudentController extends Controller
     }
 
 
-    public function register_action(Request $request)
-    {
+    public function register_action(Request $request){
         $request->validate([
             'first_name' => 'required',
             'last_name' => 'required',
@@ -66,15 +61,13 @@ class StudentController extends Controller
     }
 
 
-    public function login()
-    {
+    public function login(){
         $data['title'] = 'Login';
         return view('student.login', $data);
     }
 
 //start login function
-    public function login_action(Request $request)
-    {
+    public function login_action(Request $request){
         $request->validate([
             'username' => 'required',
             'password' => 'required',
@@ -111,8 +104,7 @@ class StudentController extends Controller
     //     return back()->with('success', 'Password changed!');
     // }
 
-    public function logout(Request $request)
-    {
+    public function logout(Request $request){
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -121,8 +113,7 @@ class StudentController extends Controller
 
 
 //  function that returnt rank and update rank from rank table based on seesion user_id 
-public function rank()
-{
+    public function rank(){
         $id = Auth()->id();//get user id from currunt session 
         $rank = DB::table('student_ranks')->where('student_id', $id)->get();
         foreach ($rank as $student_rank) {
@@ -137,8 +128,7 @@ public function rank()
          }
     }
 
-    public function upgrade_rank(Request $request)
-    {
+    public function upgrade_rank(Request $request){
             $id = Auth::guard('student')->user()->student_id ;//get user id from currunt session 
             $users = DB::table('students')->where('student_id', $id)->get();
             $rank = DB::table('student_ranks')->where('student_id', $id)->get();
@@ -198,8 +188,7 @@ public function rank()
 
 
 //start of notification function 
-public function notifications()
-{
+    public function notifications(){
     $id = Auth()->id();//get user id from currunt session 
     $rank = DB::table('rank')->where('user_id', $id)->get();
         foreach ($rank as $user_rank) {
@@ -217,8 +206,7 @@ public function notifications()
 
 
 //start of tasks function 
-public function tasks(Request $request)
-{
+    public function tasks(Request $request){
     $tasks = DB::table('tasks')->get();
     $data = [];
     foreach ($tasks as $task) {
@@ -239,7 +227,7 @@ public function tasks(Request $request)
 }
 //>orderBy('created_at', 'desc')->first()
 
-public function lastes_tasks(){
+    public function lastes_tasks(){
     $tasks = DB::table('tasks')->orderBy("id", "desc")->limit(2)->get();
     $data = [];
     foreach ($tasks as $task) {
@@ -258,8 +246,7 @@ public function lastes_tasks(){
         'data' => $data
     ]);  
 }
-public function last_solved()
-{
+    public function last_solved(){
     $student_id = Auth::id();
 
     $solved_tasks = StudentSolvedTask::where('student_id', $student_id)
@@ -274,12 +261,11 @@ public function last_solved()
             $tasks[] = $task;
         }
     }
-
     return $tasks;
 }
 
 
-function calculateCategoryIndicators() {
+    public function calculateCategoryIndicators() {
     $webSecurityCount = DB::table('student_solved_tasks')
         ->where('category', 'web_security')
         ->whereNotNull('points')
@@ -308,14 +294,13 @@ function calculateCategoryIndicators() {
     ];
 }
 
-public function getStarsCountForStudent() {
+    public function getStarsCountForStudent() {
     $student_id = Auth::guard('student')->user()->student_id ;
     $stars_count = Star::where('student_id', $student_id)->count();
     return response()->json(['stars_count' => $stars_count], 200);
 }
 //start of roadmap function 
-public function roadmaps()
-{
+    public function roadmaps(){
     $roadmaps = DB::table('roadmaps')->get();
     foreach ($roadmaps as $roadmap) {
         $data[] = [
@@ -329,8 +314,7 @@ public function roadmaps()
         'data' => $data
     ]);  
 }
-public function submitTasks(Request $request)
-{
+    public function submitTasks(Request $request){
     $tasks = Task::all();
     $data = [
         'title' => 'Submit Solution',
@@ -339,8 +323,7 @@ public function submitTasks(Request $request)
     return view('student/submit_task', $data);
 }
 
-public function submitTask(Request $request)
-{
+    public function submitTask(Request $request){
     $student_id = Auth::id();
     $task_id = $request->task_id;
     $orginal_task = Task::where('id', $task_id)->first();
@@ -477,7 +460,7 @@ return view('student/projects', ['projects' => $projects, 'title' => 'teams show
 
 //start of StudentJoinProjects
 //student send requst to project as indevisual 
-public function student_project_request(Request $request){ 
+    public function student_project_request(Request $request){ 
     $id = Auth()->id();//get user id from currunt session
     $ranks = DB::table('student_ranks')->where('student_id', $id)->get();
     $users = DB::table('students')->where('student_id', $id)->get();
@@ -511,12 +494,11 @@ public function student_project_request(Request $request){
             }
            
         }
-}}
-    }//end of user join project indevitual 
-     //end of StudentJoinProjects
-     //start of team send join project request 
-     public function team_project_request(Request $request)
-     {
+}}}
+//end of user join project indevitual 
+//end of StudentJoinProjects
+//start of team send join project request 
+    public function team_project_request(Request $request){
          $student_id = Auth::guard('student')->user()->student_id;
          $user = Auth::user();
          $project_id = $request->project_id;
@@ -601,30 +583,27 @@ public function student_project_request(Request $request){
 
 
 
-public function get_teams()
-{
-    $teams = DB::table('teams')->first();
-    //$userIds = json_decode($team->team_members); 
-    //echo $userIds;
-    foreach ($teams as $team) {
+    public function get_teams(){
+        $teams = DB::table('teams')->first();
+        //$userIds = json_decode($team->team_members); 
+        //echo $userIds;
+        foreach ($teams as $team) {
 
-        return response()->json([
-            'attributes'=>[
-                'id'=>$teams->id,
-                'team_members'=>$teams->team_members,
-        ]
-            ]);
+            return response()->json([
+                'attributes'=>[
+                    'id'=>$teams->id,
+                    'team_members'=>$teams->team_members,
+            ]
+                ]);
 
-        }
-}
+            }
+    }
 
-public function test(Request $request)
-{
+    public function test(Request $request){
    echo "holla";
 }
 
-public function create_team(Request $request)
-{
+    public function create_team(Request $request){
     $data['title'] = 'create team ';
     return view('student/create_team', $data);
     //echo "holla";
@@ -636,32 +615,31 @@ public function create_team(Request $request)
 // }
 
 //
-public function create_team_action(Request $request)
-{
-$user = Auth::user();
-$student_id = Auth::guard('student')->user()->student_id;
-$teams = DB::table('student_teams')->where('student_id', $student_id)->get();
+    public function create_team_action(Request $request){
+        $user = Auth::user();
+        $student_id = Auth::guard('student')->user()->student_id;
+        $teams = DB::table('student_teams')->where('student_id', $student_id)->get();
 
-if (!$user) {
-    return redirect()->intended('/')->with('fail', 'please login first ');
-}
+        if (!$user) {
+            return redirect()->intended('/')->with('fail', 'please login first ');
+        }
 
-if ($teams->count() > 0) {
-    return redirect()->intended('/')->with('fail', 'you are already a team member');
-}
+        if ($teams->count() > 0) {
+            return redirect()->intended('/')->with('fail', 'you are already a team member');
+        }
 
-$validatedData = $request->validate([
-    'team_name' => 'required|unique:teams'
-]);
-$invitation_link = Str::random(10);
-$team = Team::create([
-    'team_name' => $validatedData['team_name'],
-    'invitation_link' => $invitation_link,
-    'team_leader'=>$student_id
-]);
-$users = Auth()->id();
-$team->users()->attach($users);
-}
+        $validatedData = $request->validate([
+            'team_name' => 'required|unique:teams'
+        ]);
+        $invitation_link = Str::random(10);
+        $team = Team::create([
+            'team_name' => $validatedData['team_name'],
+            'invitation_link' => $invitation_link,
+            'team_leader'=>$student_id
+        ]);
+        $users = Auth()->id();
+        $team->users()->attach($users);
+    }
 // public function edit_team_action(Request $request)
 // {
 //     $user = Auth::user();
@@ -674,13 +652,11 @@ $team->users()->attach($users);
 
 
 //  all good
-public function join_team()
-{
+public function join_team(){
     $data['title'] = 'teams show';
     return view('student/join_team', $data);
 }
-public function join_team_action(Request $request)
-{
+public function join_team_action(Request $request){
     $user = Auth::user();
     $student_id = Auth::guard('student')->user()->student_id;
     $teams = DB::table('student_teams')->where('student_id', $student_id)->get();
