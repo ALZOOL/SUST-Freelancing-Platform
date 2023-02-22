@@ -14,6 +14,7 @@ use App\Models\StudentRank;
 use App\Models\StudentSolvedTask;
 use App\Models\TaskSolution;
 use App\Models\Task;
+use App\Models\Star;
 
 
 
@@ -307,6 +308,11 @@ function calculateCategoryIndicators() {
     ];
 }
 
+public function getStarsCountForStudent() {
+    $student_id = Auth::guard('student')->user()->student_id ;
+    $stars_count = Star::where('student_id', $student_id)->count();
+    return response()->json(['stars_count' => $stars_count], 200);
+}
 //start of roadmap function 
 public function roadmaps()
 {

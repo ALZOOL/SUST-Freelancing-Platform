@@ -199,7 +199,6 @@ Route::controller(ClientController::class)->group(function(){
 
     Route::get('client/getProjectsAndTeams','getProjectsAndTeams')->name('getProjectsAndTeams');
 
-    
 
     Route::get('client/contacts_us', 'contacts_us')->name('contacts_us');
     Route::post('client/contact_us', 'contact_us')->name('contact_us.store');
@@ -234,6 +233,7 @@ Route::controller(StudentController::class)->group(function(){
      Route::get('student/join_team',  'join_team')->name('join_team');
      Route::post('student/join_team_action',  'join_team_action')->name('teams.join');
      Route::post('student/upgrade_rank',  'upgrade_rank')->name('upgrade_rank');
+     Route::get('student/getStarsCountForStudent',  'getStarsCountForStudent')->name('getStarsCountForStudent');
 
      
     //Route::get('student/tasks',  'tasks')->name('tasks');
