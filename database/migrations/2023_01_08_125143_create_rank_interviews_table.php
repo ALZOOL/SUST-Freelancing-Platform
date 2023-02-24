@@ -15,8 +15,9 @@ return new class extends Migration
     {
         Schema::create('rank_interviews', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('student_name');
-            $table->string('role');
+            $table->unsignedBigInteger('student_id')->nullable();
+            $table->foreign('student_id')->references('student_id')->on('students');
+            $table->string('username');
             $table->string('current_rank');
             $table->string('next_rank');
             $table->timestamps();

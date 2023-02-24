@@ -490,11 +490,10 @@ class ManagerController extends Controller
         $team_check= $team_id->team_id;
 
         $max_allowed = DB::table('client_projects')->where('id',$project_id)->first();
-        $student_count = DB::table('projects_teams')->where('team_id',$team_check)->get();
+        $student_count = DB::table('projects_team_members')->where('team_id',$team_check)->get();
         //$users_all_2 = ProjectsTeam::all()->toArray();
         $max_allowed_2=$max_allowed->team_count;
         $student_count_2=count($student_count);
-        
         if(!empty($student_count_2>=$max_allowed_2)) { 
             DB::table('client_projects')->where('id',$project_id)->update([
 
@@ -517,21 +516,23 @@ class ManagerController extends Controller
     //SHOW ROAD-MAPS
 
     public function show_roadmaps(){
-        $users = DB::select('select * from roadmaps');
+        //$users = DB::select('select * from roadmaps');
+        $users = DB::table('roadmaps')
+        ->join('managers', 'roadmaps.manager_id', '=', 'managers.id')->get();
+        $roadmaps= [];
         foreach ($users as $user) {
-            return response()->json([
-                    'attributes'=>[
-                        'id'=>$user->id,
-                        'manager_id'=>$user->manager_id,
-                        'manager_name'=>$user->manager_name,
-                        'title'=>$user->title,
-                        'category'=>$user->category,
-                        'description'=>$user->description,
-                ]
-                    ]);
-            
+            $roadmaps[] = [
+                'id'=>$user->id,
+                'manager_id'=>$user->manager_id,
+                'manager_name'=>$user->name,
+                'title'=>$user->title,
+                'category'=>$user->category,
+                'description'=>$user->description,
+                // add more fields as needed
+            ];
              }
-        //return view('manager.roadmap.roadmaps',['users'=>$users]);
+             //return $roadmaps;
+        return view('manager.roadmap.roadmaps',['users'=>$users]);
         }
 
     //##################
@@ -550,10 +551,8 @@ class ManagerController extends Controller
             'description' => 'required',
         ]);
         $manager_id = Auth::guard('manager')->user()->id;
-        $manager_name = Auth::guard('manager')->user()->name;
         $data = new Roadmap([
             'manager_id'=> $manager_id,
-            'manager_name'=> $manager_name,
             'title'=> $request->title,
             'category'=>$request->category,
             'description'=> $request->description,
@@ -754,20 +753,39 @@ class ManagerController extends Controller
 
     public function show_web(){
         //$users = DB::select('select * from submitted_tasks');
-        $users = DB::table('submitted_tasks')->where('category', '=', 'Web')->get();
+        ///$users = DB::table('student_solved_tasks')->where('category', '=', 'Web')->get();
+        $users = DB::table('student_solved_tasks')
+        ->join('students', 'student_solved_tasks.student_id', '=', 'students.student_id')
+        ->join('tasks', 'tasks.id', '=', 'student_solved_tasks.task_id')
+        ->select('student_solved_tasks.id','student_solved_tasks.task_id','tasks.title','student_solved_tasks.category','students.student_id','students.username','student_solved_tasks.report','student_solved_tasks.file_path','tasks.points')
+        ->where('student_solved_tasks.category', '=', 'web_development')->whereNull('student_solved_tasks.points')->get();
+        
+        //return $users;
         return view('manager.submitted_tasks.web',['users'=>$users]);
         }
     
     public function show_security(){
         //$users = DB::select('select * from submitted_tasks');
-        $users = DB::table('submitted_tasks')->where('category', '=', 'Security')->get();
-        return view('manager.submitted_tasks.security',['users'=>$users]);
+
+       // $users = DB::table('student_solved_tasks')->where('category', '=', 'Security')->get();
+       $users = DB::table('student_solved_tasks')
+       ->join('students', 'student_solved_tasks.student_id', '=', 'students.student_id')
+       ->join('tasks', 'tasks.id', '=', 'student_solved_tasks.task_id')
+       ->select('student_solved_tasks.id','student_solved_tasks.task_id','tasks.title','student_solved_tasks.category','students.student_id','students.username','student_solved_tasks.report','student_solved_tasks.file_path','tasks.points')
+       ->where('student_solved_tasks.category', '=', 'web_security')->whereNull('student_solved_tasks.points')->get();
+       //return $users;
+       return view('manager.submitted_tasks.security',['users'=>$users]);
         }
     
     public function show_design(){
         //$users = DB::select('select * from submitted_tasks');
-        $users = DB::table('submitted_tasks')->where('category', '=', 'Design')->get();
-        return view('manager.submitted_tasks.design',['users'=>$users]);
+       //$users = DB::table('student_solved_tasks')->where('category', '=', 'Design')->get();
+       $users = DB::table('student_solved_tasks')
+       ->join('students', 'student_solved_tasks.student_id', '=', 'students.student_id')
+       ->select('student_solved_tasks.id','student_solved_tasks.task_id','students.username','student_solved_tasks.report','student_solved_tasks.file_path')
+       ->where('student_solved_tasks.category', '=', 'ui_ux')->whereNull('student_solved_tasks.points')->get();
+
+       return view('manager.submitted_tasks.design',['users'=>$users]);
         }
 
 
@@ -775,15 +793,18 @@ class ManagerController extends Controller
 
     //CUSTOM-POINTS
 
-    public function custom(Request $request,$student_name,$id){
-        $users = DB::table('students')->where('first_name', '=', $student_name)->value('points');
+    public function custom(Request $request,$student_id,$id){
+        $users = DB::table('student_ranks')->where('student_id', '=', $student_id)->value('points');
         $x = $users;
         $y=$request->points_n;
         $z=$x+$y;
-    	DB::table('students')->where('first_name',$student_name)->update([
+    	DB::table('student_ranks')->where('student_id',$student_id)->update([
     		'points'=>$z,
     	]);
-    	DB::table('submitted_tasks')->where('id',$id)->delete();
+
+        DB::table('student_solved_tasks')->where('student_id',$student_id)->update([
+    		'points'=>$y,]);
+    	//DB::table('submitted_tasks')->where('id',$id)->delete();
         return back();
     }
 
@@ -791,15 +812,19 @@ class ManagerController extends Controller
 
     //FULL-POINTS
 
-    public function full(Request $request,$student_name,$id){
-        $users = DB::table('students')->where('first_name', '=', $student_name)->value('points');
+    public function full(Request $request,$student_id,$id){
+        $users = DB::table('student_ranks')->where('student_id', '=', $student_id)->value('points');
         $x = $users;
         $y=$request->full;
         $z=$x+$y;
-    	DB::table('students')->where('first_name',$student_name)->update([
+    	DB::table('student_ranks')->where('student_id',$student_id)->update([
     		'points'=>$z,
     	]);
-    	DB::table('submitted_tasks')->where('id',$id)->delete();
+        DB::table('student_solved_tasks')->where('student_id',$student_id)->update([
+    		'points'=>$y,
+    	]);
+    	//DB::table('student_solved_tasks')->where('id',$id)->delete();
+
         return back();
     }
 
@@ -827,11 +852,9 @@ class ManagerController extends Controller
     {
         $result = DB::table('interview_requests')->where('id',$id)->first();
         $data=new RankInterview;
-        $data->id=$result->id;
-        $data->first_name=$result->first_name;
-        $data->last_name=$result->last_name;
+        //$data->id=$result->id;
+        $data->student_id=$result->student_id; 
         $data->username=$result->username;
-        $data->role=$result->role;
         $data->current_rank=$result->current_rank;
         $data->next_rank=$result->next_rank;
         
@@ -979,8 +1002,15 @@ public function add_student_to_project(Request $request)
 ///start of add a team or accept a team to project
 
 public function team_join_projects(){
-    $studentRequests = DB::table('team_join_projects')->get();
+    //$teamRequests = DB::table('team_join_projects')->get();
     //echo $studentRequests;
+    $studentRequests = DB::table('team_join_projects')
+    ->join('teams', 'team_join_projects.team_id', '=', 'teams.team_id')
+    ->join('client_projects' , 'team_join_projects.project_id','=','client_projects.id')
+    ->join('clients' , 'client_projects.client_id','=','clients.client_id')
+    ->select('team_join_projects.id', 'team_join_projects.project_id','clients.email','team_join_projects.project_title','team_join_projects.team_id','teams.team_name')
+    ->get();
+//return $teamRequests;
     return view('manager.accept_team', compact('studentRequests'));    
     }
 

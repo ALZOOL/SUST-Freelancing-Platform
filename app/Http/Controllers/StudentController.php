@@ -301,7 +301,11 @@ class StudentController extends Controller
 }
 //start of roadmap function 
     public function roadmaps(){
-    $roadmaps = DB::table('roadmaps')->get();
+    //$roadmaps = DB::table('roadmaps')->get();
+    $roadmaps = DB::table('roadmaps')
+    ->join('managers', 'roadmaps.manager_id', '=', 'managers.')
+    ->select('roadmap_id.id', 'managers.name','roadmap.title','roadmap.description')
+    ->get();
     foreach ($roadmaps as $roadmap) {
         $data[] = [
             'roadmap_id'=>$roadmap->id,

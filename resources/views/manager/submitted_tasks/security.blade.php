@@ -15,34 +15,30 @@
     <tr>
 	    <th scope="col">#ID</th>
         <th scope="col">Student Name</th>
-        <th scope="col">Role</th>
-	    <th scope="col">Task Name</th>
-        <th scope="col">Level</th>
+	    <th scope="col">title</th>
         <th scope="col">Points</th>
         <th scope="col">category</th>
-	    <th scope="col">Answer</th>
+	    <th scope="col">report</th>
     </tr>
   </thead>
   <tbody>
   	@foreach($users as $user)
     	<tr>
 	      <td> {{ $user->id }}</td>
-	      <td>{{ $user->student_name }}</td>
-          <td>{{ $user->role }}</td>
-	      <td>{{ $user->task_name }}</td>
-          <td>{{ $user->level }}</td>
+	      <td>{{ $user->username }}</td>
+	      <td>{{ $user->title }}</td>
           <td>{{ $user->points }}</td>
           <td>{{ $user->category }}</td>
-          <td>{{ $user->answer }}</td>
+          <td>{{ $user->report }}</td>
 	      <td>
             <h8>points</h8>
-            <form action="{{route('custom',[$user->student_name,$user->id])}}" method="post">
+            <form action="{{route('custom',[$user->student_id,$user->id])}}" method="post">
                 @csrf
                 @method('PUT')
                 <input name="points_n" type="number" value="1" style="width: 50px;" />
                 <button class="btn btn-primary" type="submit">custom</button>
             </form>
-            <form action="{{route('full',[$user->student_name,$user->id])}}" method="post">
+            <form action="{{route('full',[$user->student_id,$user->id])}}" method="post">
                 @csrf
                 @method('PUT')
                 <button class="btn btn-danger" name="full" type="submit" value="{{ $user->points }}">full</button>

@@ -40,7 +40,7 @@
   	@foreach($users as $user)
     	<tr>
 	      <td> {{ $user->id }}</td>
-        <td> {{ $user->manager_name }}</td>
+        <td> {{ $user->name }}</td>
 	      <td>{{ $user->title }}</td>
         <td>{{ $user->category }}</td>
 	      <td>{{ $user->description }}</td>

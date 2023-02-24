@@ -18,8 +18,7 @@ class RankInterview extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'student_name',
-        'role',
+        'username',
         'current_rank',
         'next_rank',
         

@@ -14,12 +14,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('tasks', function (Blueprint $table) {
-            $table->unsignedBigInteger('id')->primary();
+            $table->id();
             $table->string('title');
             $table->string('level');
             $table->string('category');
             $table->string('description');
-            $table->string('filepath');
+            $table->string('file_path');
             $table->char('rank',3);
             $table->string('points');
             $table->timestamps();   

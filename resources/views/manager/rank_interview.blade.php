@@ -15,10 +15,7 @@
   <thead>
     <tr>
 	    <th scope="col">#ID</th>
-	    <th scope="col">FirstName</th>
-      <th scope="col">LastName</th>
       <th scope="col">Username</th>
-        <th scope="col">role</th>
 	    <th scope="col">from</th>
 	    <th scope="col">to</>
     </tr>
@@ -27,10 +24,7 @@
   	@foreach($users as $user)
     	<tr>
 	      <td> {{ $user->id }}</td>
-	      <td>{{ $user->first_name }}</td>
-        <td>{{ $user->last_name }}</td>
         <td>{{ $user->username }}</td>
-        <td>{{ $user->role }}</td>
 	      <td>{{ $user->current_rank }}</td>
         <td>{{ $user->next_rank }}</td>
 	      <td>
@@ -63,10 +57,7 @@
   <thead>
     <tr>
 	    <th scope="col">#ID</th>
-      <th scope="col">FirstName</th>
-      <th scope="col">LastName</th>
       <th scope="col">Username</th>
-        <th scope="col">role</th>
 	    <th scope="col">from</th>
 	    <th scope="col">to</>
     </tr>
@@ -76,10 +67,7 @@
 
     	<tr>
             <td> {{ $result->id }}</td>
-            <td>{{ $result->first_name }}</td>
-            <td>{{$result ->last_name }}</td>
             <td>{{ $result->username }}</td>
-            <td>{{ $result->role }}</td>
             <td>{{ $result->current_rank }}</td>
             <td>{{ $result->next_rank }}</td>
             <td>
