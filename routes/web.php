@@ -221,6 +221,7 @@ Route::controller(StudentController::class)->group(function(){
     Route::get('student/logout', 'logout')->name('student_logout');
     Route::get('student/rank', 'rank')->name('rank');
     Route::get('student/roadmaps',  'roadmaps')->name('roadmaps');
+    Route::get('student/tasks',  'tasks')->name('tasks');
     
     // Route::get('student/home','home')->name('home');
      Route::get('student/register','register')->name('student.register');

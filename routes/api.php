@@ -22,7 +22,48 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-    Route::controller(ClientController::class)->group(function(){
+Route::controller(StudentController::class)->group(function(){
+    Route::get('student/login', 'login')->name('student_login');
+    Route::post('student/login_action','login_action')->name('student_login.process');
+    Route::get('student/logout', 'logout')->name('student_logout');
+    Route::get('student/rank', 'rank')->name('rank');
+    Route::get('student/roadmaps',  'roadmaps')->name('roadmaps');
+    Route::get('student/tasks',  'tasks')->name('tasks');
+
+    
+    // Route::get('student/home','home')->name('home');
+     Route::get('student/register','register')->name('student.register');
+     Route::post('student/register','register_action')->name('student_register.process'); 
+     Route::get('student/test_url','test_fun')->name('test_route');
+     Route::get('student/client_project','client_project')->name('client_project');
+    //Create Team :
+     //Route::get('student/create_team','create_team')->name('create_team');
+     Route::post('student/create_team','create_team_action')->name('teams.create');
+     //Route::get('student/join_team',  'join_team')->name('join_team');
+     Route::post('student/join_team',  'join_team_action')->name('teams.join');
+     Route::post('student/upgrade_rank',  'upgrade_rank')->name('upgrade_rank');
+     Route::get('student/getStarsCountForStudent',  'getStarsCountForStudent')->name('getStarsCountForStudent');
+
+     
+    //Route::get('student/tasks',  'tasks')->name('tasks');
+    
+    //SHOW CLIENTS PROJECTS TO STUDENTS
+    Route::get('student/projects',  'projects')->name('projects');
+    
+    //STUDENT JOINING CLIENTS PROJECTS AS TEAM OR SINGLE STUDENTS
+    Route::post('student/student_project_request',  'student_project_request')->name('student_project_request');
+    Route::post('student/team_project_request',  'team_project_request')->name('team_project_request');
+    
+    Route::get('student/calculateCategoryIndicators',  'calculateCategoryIndicators')->name('calculateCategoryIndicators');
+    
+    Route::get('student/lastes_tasks',  'lastes_tasks')->name('lastes_tasks');
+    
+    Route::get('student/submitTasks',  'submitTasks')->name('submitTasks');
+    Route::post('student/submitTask',  'submitTask')->name('submitTask');
+    Route::get('student/last_solved',  'last_solved')->name('last_solved');  
+});
+
+Route::controller(ClientController::class)->group(function(){
     Route::get('client/login', 'login')->name('client_login');
     Route::post('client/login_action','login_action')->name('client_login.process');
     Route::get('client/logout', 'logout')->name('logout');
@@ -45,6 +86,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     Route::get('client/showstar', 'showstar')->name('showstar');
     Route::post('client/stars_store', 'stars')->name('stars.store');
 });
+
 
 
 Route::get('/token', function () {

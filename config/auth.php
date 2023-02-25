@@ -43,6 +43,17 @@ return [
         'manager' => [
             'driver' => 'session',
             'provider' => 'manager',
+            'role' => 'manager',
+        ],
+        'teacher' => [
+            'driver' => 'session',
+            'provider' => 'managers',
+            'role' => 'teacher',
+        ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'managers',
+            'role' => 'admin',
         ],
         'client' => [
             'driver' => 'session',

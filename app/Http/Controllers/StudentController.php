@@ -29,7 +29,6 @@ class StudentController extends Controller
         return view('student.register', $data);
     }
 
-
     public function register_action(Request $request){
         $request->validate([
             'first_name' => 'required',
@@ -57,8 +56,8 @@ class StudentController extends Controller
             $data->save();
         }
     
-        return redirect()->route('student_login')->with('success', 'Registration success. Please login!');
-    }
+        return response()->json(['success' => 'Registration completed successfully'], 200);
+    }//done
 
 
     public function login(){
@@ -72,16 +71,30 @@ class StudentController extends Controller
             'username' => 'required',
             'password' => 'required',
         ]);
-        if (Auth::guard('student')->attempt(['username' => $request->username, 'password' => $request->password])) {
-            $request->session()->regenerate();
+        if (Auth::guard('student')->attempt(['username' => $request->username, 'password' => $request->password]) 
+        || Auth::guard('student')->attempt(['email' => $request->username, 'password' => $request->password])) {
+            $student = Student::where(function ($query) use ($request) {$query->where('email', $request->username)->orWhere('username', $request->username);})->first();
+            $studentinfo = Student::where(function ($query) use ($request) {$query->where('email', $request->username)->orWhere('username', $request->username);})
+            ->select('first_name', 'last_name', 'username', 'email', 'avater','role','team_id')->first();
+            $authorizationExists = true;
+            while ($authorizationExists) {
+                $Authorization = Str::random(40);
+                $authorizationExists = DB::table('students')->where('Authorization', $Authorization)->exists();
+            }
+            $student->Authorization = $Authorization;
+            $student->save(); 
+            return response()->json([
+                "student" => $studentinfo,
+                "Authorization" => $Authorization
+            ]);
+            
+           // $request->session()->regenerate();
 
-            return view('student.home');
+           // return view('student.home');
         }
+        return response()->json(['ok' => "wrong username or password"], 200);
+    }//done
 
-        return back()->withErrors([
-            'password' => 'Wrong username or password',
-        ]);
-    }
 //end login finction 
 
 
@@ -105,17 +118,34 @@ class StudentController extends Controller
     // }
 
     public function logout(Request $request){
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect('student/login');
-    }
+
+        $Authorization = $request->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student->update(['Authorization' => null]);
+        Auth::guard('student')->logout();
+        return response()->json(['ok' => "logout successfully"], 200);
+    }//done
 
 
 //  function that returnt rank and update rank from rank table based on seesion user_id 
     public function rank(){
-        $id = Auth()->id();//get user id from currunt session 
-        $rank = DB::table('student_ranks')->where('student_id', $id)->get();
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $rank = DB::table('student_ranks')->where('student_id', $student_id)->get();
         foreach ($rank as $student_rank) {
         return response()->json([
                 'attributes'=>[
@@ -126,7 +156,7 @@ class StudentController extends Controller
                 ]);
         
          }
-    }
+    }//done
 
     public function upgrade_rank(Request $request){
             $id = Auth::guard('student')->user()->student_id ;//get user id from currunt session 
@@ -183,30 +213,40 @@ class StudentController extends Controller
             }
         
         }
-//end of rank function 
+//end of rank function  //do it tomworo 
 
 
 
 //start of notification function 
     public function notifications(){
+
     $id = Auth()->id();//get user id from currunt session 
-    $rank = DB::table('rank')->where('user_id', $id)->get();
+    $rank = DB::table('student_notifications')->where('user_id', $id)->get();
         foreach ($rank as $user_rank) {
         return response()->json([
                 'attributes'=>[
-                    'student_id'=>$user_rank->user_id,
-                    'points'=>$user_rank->points,
-                    'rank'=>$user_rank->rank,
+                    'id'=>$user_rank->user_id,
+                    'student_id'=>$user_rank->points,
+                    'message_id'=>$user_rank->rank,
             ]
                 ]);
-
             }
-}
+} //add join with message and also 
 //end of notification function 
 
 
 //start of tasks function 
     public function tasks(Request $request){
+    $Authorization = request()->header('Authorization');
+    if (!$Authorization) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    // Validate authorization token with client guard
+    $student = Student::where('Authorization', $Authorization)->first();
+    if (!$student) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
+
     $tasks = DB::table('tasks')->get();
     $data = [];
     foreach ($tasks as $task) {
@@ -217,214 +257,277 @@ class StudentController extends Controller
             'description'=>$task->description,
             'level'=>$task->level,
             'rank'=>$task->rank,
-            'filepath'=>$task->filepath,
+            'file_path'=>$task->file_path,
             'points'=>$task->points,
         ];
     }
     return response()->json([
         'data' => $data
     ]);  
-}
+} //done
+
+
 //>orderBy('created_at', 'desc')->first()
 
     public function lastes_tasks(){
-    $tasks = DB::table('tasks')->orderBy("id", "desc")->limit(2)->get();
-    $data = [];
-    foreach ($tasks as $task) {
-        $data[] = [
-            'task_id'=>$task->id,
-            'title'=>$task->title,
-            'category'=>$task->category,
-            'description'=>$task->description,
-            'level'=>$task->level,
-            'rank'=>$task->rank,
-            'filepath'=>$task->filepath,
-            'points'=>$task->points,
-        ];
-    }
-    return response()->json([
-        'data' => $data
-    ]);  
-}
-    public function last_solved(){
-    $student_id = Auth::id();
-
-    $solved_tasks = StudentSolvedTask::where('student_id', $student_id)
-        ->orderBy('created_at', 'desc')
-        ->get();
-
-    $tasks = [];
-
-    foreach ($solved_tasks as $solved_task) {
-        $task = Task::find($solved_task->task_id);
-        if ($task) {
-            $tasks[] = $task;
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
-    }
-    return $tasks;
-}
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $tasks = DB::table('tasks')->orderBy("id", "desc")->limit(2)->get();
+        $data = [];
+        foreach ($tasks as $task) {
+            $data[] = [
+                'task_id'=>$task->id,
+                'title'=>$task->title,
+                'category'=>$task->category,
+                'description'=>$task->description,
+                'level'=>$task->level,
+                'rank'=>$task->rank,
+                'file_path'=>$task->file_path,
+                'points'=>$task->points,
+            ];
+        }
+        return response()->json([
+            'data' => $data
+     ]);  
+    }//done
+
+    public function last_solved(){
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $solved_tasks = StudentSolvedTask::where('student_id', $student_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $tasks = [];
+        foreach ($solved_tasks as $solved_task) {
+            $task = Task::find($solved_task->task_id);
+            if ($task) {
+                $tasks[] = $task;
+            }
+        }
+        return $tasks;
+    }//done
 
 
     public function calculateCategoryIndicators() {
-    $webSecurityCount = DB::table('student_solved_tasks')
-        ->where('category', 'web_security')
-        ->whereNotNull('points')
-        ->count();
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
 
-    $webDevCount = DB::table('student_solved_tasks')
-        ->where('category', 'web_development')
-        ->whereNotNull('points')
-        ->count();
+        $webSecurityCount = DB::table('student_solved_tasks')
+            ->where('category', 'web_security')
+            ->where('student_id', $student_id)
+            ->whereNotNull('points')
+            ->count();
 
-    $uiUxCount = DB::table('student_solved_tasks')
-        ->where('category', 'ui/ux')
-        ->whereNotNull('points')
-        ->count();
+        $webDevCount = DB::table('student_solved_tasks')
+            ->where('category', 'web_development')
+            ->where('student_id', $student_id)
+            ->whereNotNull('points')
+            ->count();
 
-    $total = $webSecurityCount + $webDevCount + $uiUxCount;
+        $uiUxCount = DB::table('student_solved_tasks')
+            ->where('category', 'ui/ux')
+            ->where('student_id', $student_id)
+            ->whereNotNull('points')
+            ->count();
 
-    $webSecurityPercent = $total > 0 ? round(($webSecurityCount / $total) * 100, 2) : 0;
-    $webDevPercent = $total > 0 ? round(($webDevCount / $total) * 100, 2) : 0;
-    $uiUxPercent = $total > 0 ? round(($uiUxCount / $total) * 100, 2) : 0;
+        $total = $webSecurityCount + $webDevCount + $uiUxCount;
 
-    return [
-        'web_security' => $webSecurityPercent,
-        'web_development' => $webDevPercent,
-        'ui/ux' => $uiUxPercent
-    ];
-}
+        $webSecurityPercent = $total > 0 ? round(($webSecurityCount / $total) * 100, 2) : 0;
+        $webDevPercent = $total > 0 ? round(($webDevCount / $total) * 100, 2) : 0;
+        $uiUxPercent = $total > 0 ? round(($uiUxCount / $total) * 100, 2) : 0;
+
+        return [
+            'web_security' => $webSecurityPercent,
+            'web_development' => $webDevPercent,
+            'ui_ux' => $uiUxPercent
+        ];
+    }//done 
 
     public function getStarsCountForStudent() {
-    $student_id = Auth::guard('student')->user()->student_id ;
-    $stars_count = Star::where('student_id', $student_id)->count();
-    return response()->json(['stars_count' => $stars_count], 200);
-}
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $stars_count = Star::where('student_id', $student_id)->count();
+        return response()->json(['stars_count' => $stars_count], 200);
+    }//done
+
+
 //start of roadmap function 
     public function roadmaps(){
-    //$roadmaps = DB::table('roadmaps')->get();
-    $roadmaps = DB::table('roadmaps')
-    ->join('managers', 'roadmaps.manager_id', '=', 'managers.')
-    ->select('roadmap_id.id', 'managers.name','roadmap.title','roadmap.description')
-    ->get();
-    foreach ($roadmaps as $roadmap) {
-        $data[] = [
-            'roadmap_id'=>$roadmap->id,
-            'manager_id'=>$roadmap->manager_id,
-            'title'=>$roadmap->title,
-            'description'=>$roadmap->description,
-        ];
-    } 
-    return response()->json([
-        'data' => $data
-    ]);  
-}
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        //$roadmaps = DB::table('roadmaps')->get();
+        $roadmaps = DB::table('roadmaps')
+        ->join('managers', 'roadmaps.manager_id', '=', 'managers.id')
+        ->select('roadmaps.id', 'managers.first_name','managers.last_name','roadmaps.title','roadmaps.description')
+        ->get();
+        foreach ($roadmaps as $roadmap) {
+            $data[] = [
+                'roadmap_id'=>$roadmap->id,
+                'first_name'=>$roadmap->first_name,
+                'last_name'=>$roadmap->last_name,
+                'title'=>$roadmap->title,
+                'description'=>$roadmap->description,
+            ];
+        } 
+        return response()->json([
+            'data' => $data
+        ]);  
+    }//done
+    
     public function submitTasks(Request $request){
-    $tasks = Task::all();
-    $data = [
-        'title' => 'Submit Solution',
-        'tasks' => $tasks
-    ];
-    return view('student/submit_task', $data);
-}
+        $tasks = Task::all();
+        $data = [
+            'title' => 'Submit Solution',
+            'tasks' => $tasks
+        ];
+        return view('student/submit_task', $data);
+    }// just view 
 
     public function submitTask(Request $request){
-    $student_id = Auth::id();
-    $task_id = $request->task_id;
-    $orginal_task = Task::where('id', $task_id)->first();
-    $category = $orginal_task->category;
-    $level = $orginal_task->level;
-    $solution = $request->solution;;
-    $report = $orginal_task->report;
-    $file_path = '';
-    // check if file was uploaded
-    if ($request->hasFile('file')) {
-        $file = $request->file('file');
-        $file_path = $file->store('uploads/tasks');
-    }
-    // check if student has already submitted the task
-    $submitted_task = StudentSolvedTask::where('student_id', $student_id)
-        ->where('task_id', $task_id)
-        ->first();
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $task_id = $request->task_id;
+        $orginal_task = Task::where('id', $task_id)->first();
+        $category = $orginal_task->category;
+        $level = $orginal_task->level;
+        $solution = $request->solution;;
+        $report = $orginal_task->report;
+        $file_path = '';
+        // check if file was uploaded
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $file_path = $file->store('uploads/tasks');
+        }
+        // check if student has already submitted the task
+        $submitted_task = StudentSolvedTask::where('student_id', $student_id)
+            ->where('task_id', $task_id)
+            ->first();
 
-    if ($submitted_task) {
-        return response()->json(['error' => "You already sumbit the task "], 400);
-    }
-    // save task to student_solved_tasks table
-    $task = new StudentSolvedTask();
-    //echo $request->student_id;
-    // check category and level to determine solution/report
-    if ($category == 'ui/ux') {
-        // no solution/report needed
-        $task->task_id = $task_id;
-        $task->student_id = $student_id;
-        $task->file_path = $file_path;
-        $task->category= $category;
-        $task->save();
-        return response()->json(['ok' => "Task upload successfully "], 200);
-    } elseif ($category == 'web_security') {
-        if ($level == 'easy') {
-            $task->solution = $solution;
-            $task_solution = TaskSolution::where('task_id', $task_id)->first();
-
-            if ($task_solution->solution == $solution) {
-                $task->task_id = $task_id;
-                $task->student_id = $student_id;
-                $task->category= $category;
-                $task->solution = $solution;
-                $task->file_path = $file_path;
-                $task->points = $orginal_task->points;
-                $task->save();
-                // update student points in student_ranks table
-                $rank = StudentRank::where('student_id', $student_id)->first();
-                $rank->points += $orginal_task->points;
-                $rank->save();
-
-                return response()->json(['ok' => "congrats you solved it"], 200);
-            } else {
-                return response()->json(['error' => "Incorrect solution"], 400);
-            }
-        } else {//for medim and hard security task
+        if ($submitted_task) {
+            return response()->json(['error' => "You already sumbit the task "], 400);
+        }
+        // save task to student_solved_tasks table
+        $task = new StudentSolvedTask();
+        //echo $request->student_id;
+        // check category and level to determine solution/report
+        if ($category == 'ui/ux') {
+            // no solution/report needed
             $task->task_id = $task_id;
             $task->student_id = $student_id;
-            $task->category= $category;
-            $task->report = $report;
-            $task->save();
-        }
-    } else { // web_development
-        if ($level == 'easy') {
-            $task->solution = $solution;
-            $task_solution = TaskSolution::where('task_id', $task_id)->first();
-            if ($task_solution->solution == $solution) {
-                $task->task_id = $task_id;
-                $task->student_id = $student_id;
-                $task->category= $category;
-                $task->solution = $solution;
-                $task->file_path = $file_path;
-                $task->points = $orginal_task->points;
-                $task->save();
-                // update student points in student_ranks table
-                $rank = StudentRank::where('student_id', $student_id)->first();
-                $rank->points += $orginal_task->points;
-                $rank->save();
-                return response()->json(['ok' => "congrats you solev it  "], 200);
-            }
-            else {
-                    return response()->json(['error' => "Incorrect solution"], 400);
-                 }
-        }
-        else{
-            $task->task_id = $task_id;
-            $task->student_id = $student_id;
-            $task->category= $category;
             $task->file_path = $file_path;
+            $task->category= $category;
             $task->save();
             return response()->json(['ok' => "Task upload successfully "], 200);
-        }    
-    }
+        } elseif ($category == 'web_security') {
+            if ($level == 'easy') {
+                $task->solution = $solution;
+                $task_solution = TaskSolution::where('task_id', $task_id)->first();
 
-    return response()->json(['ok' => "Task upload successfully "], 200);
+                if ($task_solution->solution == $solution) {
+                    $task->task_id = $task_id;
+                    $task->student_id = $student_id;
+                    $task->category= $category;
+                    $task->solution = $solution;
+                    $task->file_path = $file_path;
+                    $task->points = $orginal_task->points;
+                    $task->save();
+                    // update student points in student_ranks table
+                    $rank = StudentRank::where('student_id', $student_id)->first();
+                    $rank->points += $orginal_task->points;
+                    $rank->save();
+
+                    return response()->json(['ok' => "congrats you solved it"], 200);
+                } else {
+                    return response()->json(['error' => "Incorrect solution"], 400);
+                }
+            } else {//for medim and hard security task
+                $task->task_id = $task_id;
+                $task->student_id = $student_id;
+                $task->category= $category;
+                $task->report = $report;
+                $task->save();
+            }
+        } else { // web_development
+            if ($level == 'easy') {
+                $task->solution = $solution;
+                $task_solution = TaskSolution::where('task_id', $task_id)->first();
+                if ($task_solution->solution == $solution) {
+                    $task->task_id = $task_id;
+                    $task->student_id = $student_id;
+                    $task->category= $category;
+                    $task->solution = $solution;
+                    $task->file_path = $file_path;
+                    $task->points = $orginal_task->points;
+                    $task->save();
+                    // update student points in student_ranks table
+                    $rank = StudentRank::where('student_id', $student_id)->first();
+                    $rank->points += $orginal_task->points;
+                    $rank->save();
+                    return response()->json(['ok' => "congrats you solev it  "], 200);
+                }
+                else {
+                        return response()->json(['error' => "Incorrect solution"], 400);
+                     }
+            }
+            else{
+                $task->task_id = $task_id;
+                $task->student_id = $student_id;
+                $task->category= $category;
+                $task->file_path = $file_path;
+                $task->save();
+                return response()->json(['ok' => "Task upload successfully "], 200);
+            }    
+        }
+
+        return response()->json(['ok' => "Task upload successfully "], 200);
    //return redirect()->back()->with('success', 'Task submitted successfully.');
-}
+    }//done tset with web_security and web_deveolmpent tasks 
 
 
 
@@ -435,31 +538,42 @@ class StudentController extends Controller
 //start of projects function
 
 //here the with blade 
-public function projects(){
-$projects = DB::table('client_projects')->get();
-//$data['title'] = 'teams show';
-return view('student/projects', ['projects' => $projects, 'title' => 'teams show']);
-}
-// public function projects()
-// {
-//     $projects = DB::table('client_projects')->get();
-//     foreach ($projects as $projects) {
+    public function projectsvue(){
+        $projects = DB::table('client_projects')->get();
+        //$data['title'] = 'teams show';
+        return view('student/projects', ['projects' => $projects, 'title' => 'teams show']);
+    } //no nedded just vue 
 
-//         return response()->json([
-//             'attributes'=>[
-//                 'project_id'=>$projects->project_id,
-//                 'name'=>$projects->name,
-//                 'level'=>$projects->level,
-//                 'rank'=>$projects->rank,
-//                 'category'=>$projects->category,
-//                 'duration'=>$projects->duration,
-//                 'points'=>$projects->points,
-//                 'status'=>$projects->status,
-//                 'work_on_team_id'=>$projects->work_on_team_id,    
-//         ]
-//             ]);
-//     } 
-// }
+
+    public function projects(){
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $data = [];
+        $projects = DB::table('client_projects')->whereNull('status')->get();
+        foreach ($projects as $project) {
+            $data[] = [
+                'project_id'=>$project->id,
+                'title'=>$project->title,
+                'category'=>$project->category,
+                'description'=>$project->description,
+                'deadline'=>$project->deadline,
+                'frontend'=>$project->frontend,
+                'backend'=>$project->backend,
+                'ui_ux'=>$project->ui_ux,
+                'security'=>$project->security,
+            ];
+        }
+        return response()->json([
+            'data' => $data
+        ]);
+    }//done //get project that has no status yet  
 
 
 //start of StudentJoinProjects
@@ -498,7 +612,9 @@ return view('student/projects', ['projects' => $projects, 'title' => 'teams show
             }
            
         }
-}}}
+        }
+    }
+}
 //end of user join project indevitual 
 //end of StudentJoinProjects
 //start of team send join project request 
@@ -586,7 +702,7 @@ return view('student/projects', ['projects' => $projects, 'title' => 'teams show
 //end  of projects function
 
 
-
+    //make this to grep team mebers 
     public function get_teams(){
         $teams = DB::table('teams')->first();
         //$userIds = json_decode($team->team_members); 
@@ -604,32 +720,31 @@ return view('student/projects', ['projects' => $projects, 'title' => 'teams show
     }
 
     public function test(Request $request){
-   echo "holla";
-}
+        echo "holla";
+    }
 
     public function create_team(Request $request){
-    $data['title'] = 'create team ';
-    return view('student/create_team', $data);
-    //echo "holla";
-}
-//midle ware
-// public function __construct()
-// {
-//     $this->middleware(CheckInvitationLink::class);
-// }
+        $data['title'] = 'create team ';
+        return view('student/create_team', $data);
+        //echo "holla";
+    } //no nedded jsu vue
+    
 
-//
     public function create_team_action(Request $request){
-        $user = Auth::user();
-        $student_id = Auth::guard('student')->user()->student_id;
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
         $teams = DB::table('student_teams')->where('student_id', $student_id)->get();
 
-        if (!$user) {
-            return redirect()->intended('/')->with('fail', 'please login first ');
-        }
-
         if ($teams->count() > 0) {
-            return redirect()->intended('/')->with('fail', 'you are already a team member');
+            return response()->json(['error' => "you are already a team member."], 422);
         }
 
         $validatedData = $request->validate([
@@ -644,54 +759,50 @@ return view('student/projects', ['projects' => $projects, 'title' => 'teams show
         $users = Auth()->id();
         $team->users()->attach($users);
     }
-// public function edit_team_action(Request $request)
-// {
-//     $user = Auth::user();
-//     if($user){
-//         if($user->teams->count()>0){
-//             return redirect()->intended('/')->with('fail', 'you already team member ');
-//         }
-//     }
-// }
 
-
-//  all good
-public function join_team(){
-    $data['title'] = 'teams show';
-    return view('student/join_team', $data);
-}
-public function join_team_action(Request $request){
-    $user = Auth::user();
-    $student_id = Auth::guard('student')->user()->student_id;
-    $teams = DB::table('student_teams')->where('student_id', $student_id)->get();
     
-    if (!$user) {
-        return redirect()->intended('/')->with('fail', 'please login first ');
+    public function join_team(){
+        $data['title'] = 'teams show';
+        return view('student/join_team', $data);
+    } //no nedded just vue
+    
+    public function join_team_action(Request $request){
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $teams = DB::table('student_teams')->where('student_id', $student_id)->get();
+        
+        if ($teams->count() > 0) {
+            return response()->json(['error' => "you are already a team member."], 422);
+        }
+        
+        $invitation_link = $request->invitation_link;
+        $team = Team::where('invitation_link', $invitation_link)->first();
+        
+        $team->users()->attach($student_id,['team_id'=>$team->team_id],['team_leader' => 0 ]);
     }
     
-    if ($teams->count() > 0) {
-        return redirect()->intended('/')->with('fail', 'you are already a team member');
-    }
-
-    $invitation_link = $request->invitation_link;
-    $team = Team::where('invitation_link', $invitation_link)->first();
-
-    $team->users()->attach($student_id,['team_id'=>$team->team_id],['team_leader' => 0 ]);
-}
-
-// public function teams_show()
+    //midle ware
+// public function __construct()
 // {
-//     $data['title'] = 'teams show';
-//     return view('student/teams_show', $data);
+//     $this->middleware(CheckInvitationLink::class);
 // }
-
-
-//end of teams 
-
-
-//end of roadmap function 
-
-
-
+//
+    // public function edit_team_action(Request $request)
+    // {
+    //     $user = Auth::user();
+    //     if($user){
+    //         if($user->teams->count()>0){
+    //             return redirect()->intended('/')->with('fail', 'you already team member ');
+    //         }
+    //     }
+    // }
 
 }//end of controller 

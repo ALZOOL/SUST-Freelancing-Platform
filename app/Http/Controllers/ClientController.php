@@ -14,8 +14,7 @@ use App\Models\Star;
 use App\Models\ProjectsTeamMember;
 use App\Models\Student;
 use Illuminate\Support\Str;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Support\Facades\Cookie;
+
 
 
 
@@ -66,7 +65,8 @@ class ClientController extends Controller
         'password' => 'required',
     ]);
     if (Auth::guard('client')->attempt(['email' => $request->email, 'password' => $request->password])) {
-        $client = Client::where('email', $request->email)->select('first_name','last_name','company_name','email','company_email');
+        $client = Client::where('email', $request->email)->first();
+        $clientinfo=Client::where('email', $request->email)->select('first_name', 'last_name', 'company_name', 'email', 'company_email')->first();
         // Generate a unique cookie value for the client
         $Authorization = Str::random(40);
         // Update the client's cookie_value field with the generated value
@@ -74,7 +74,7 @@ class ClientController extends Controller
         $client->save();
         
         return response()->json([
-            "client" => $client,
+            "client" => $clientinfo,
             "Authorization" => $Authorization
         ]);
     } else {
