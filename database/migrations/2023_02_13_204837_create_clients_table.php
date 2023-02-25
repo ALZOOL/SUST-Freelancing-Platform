@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('email')->Unique();
             $table->string('company_email')->nullable();
             $table->string('password');
+            $table->string('Authorization')->Unique()->nullable();
             $table->timestamps();
         });
     }

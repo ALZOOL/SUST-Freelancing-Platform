@@ -25,6 +25,7 @@ return new class extends Migration
             $table->unsignedBigInteger('team_id')->nullable();
             $table->foreign('team_id')->references('team_id')->on('teams');
             $table->string('password');
+            $table->string('Authorization')->Unique()->nullable();
             $table->timestamps();
         });
     }

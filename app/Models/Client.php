@@ -24,6 +24,7 @@ class Client extends Authenticatable
         'company_name',
         'company_email',
         'password',
+        'Authorization',
 
     ];
 }

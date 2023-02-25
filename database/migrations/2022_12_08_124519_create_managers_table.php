@@ -15,12 +15,12 @@ return new class extends Migration
     {
     Schema::create('managers', function (Blueprint $table) {
     $table->id();
-    $table->string('name');
+    $table->string('first_name');
+    $table->string('last_name');
     $table->string('email')->unique();
     $table->string('role');
-    $table->timestamp('email_verified_at')->nullable();
     $table->string('password');
-    $table->rememberToken();
+    $table->string('Authorization')->Unique()->nullable();
     $table->timestamps();
     });
     }
