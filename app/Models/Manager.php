@@ -23,10 +23,12 @@ class Manager extends Authenticatable
 
     protected $guarded=['manager'] ;
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'role',
+        'Authorization'
     ];
 
     /**
@@ -36,7 +38,6 @@ class Manager extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'remember_token',
     ];
 
     /**
@@ -45,6 +46,5 @@ class Manager extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
     ];
 }

@@ -28,5 +28,6 @@ class Student extends Authenticatable
         'role',
         'team_id',
         'password',
+        'Authorization',
     ];
 }
