@@ -36,6 +36,14 @@ return [
     */
 
     'guards' => [
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admin',
+        ],
+        'teacher' => [
+            'driver' => 'session',
+            'provider' => 'teacher',
+        ],
         'student' => [
             'driver' => 'session',
             'provider' => 'student',
@@ -68,6 +76,14 @@ return [
     */
 
     'providers' => [
+        'admin' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Manager::class,
+        ],
+        'teacher' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Manager::class,
+        ],
         'student' => [
             'driver' => 'eloquent',
             'model' => App\Models\Student::class,
