@@ -26,7 +26,7 @@
             <td>{{ $project->frontend }}</td>
             <td>{{ $project->backend }}</td>
             <td>{{ $project->ui_ux }}</td>
-            <td>{{ $project->security }}</td>
+            <td>{{ $project->web_security }}</td>
             <td>
                 <form action="{{ route('student_project_request') }}" method="POST">
                     @csrf

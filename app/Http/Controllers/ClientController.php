@@ -294,4 +294,5 @@ public function stars(Request $request){
     }
     return response()->json(['ok' => "Stars added successfully!"], 200);
 }
+
 }

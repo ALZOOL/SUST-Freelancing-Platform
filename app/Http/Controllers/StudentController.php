@@ -15,6 +15,7 @@ use App\Models\StudentSolvedTask;
 use App\Models\TaskSolution;
 use App\Models\Task;
 use App\Models\Star;
+use App\Models\StudentTeam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -83,17 +84,18 @@ class StudentController extends Controller
             }
             $student->Authorization = $Authorization;
             $student->save(); 
-            // return response()->json([
-            //     "student" => $studentinfo,
-            //     "Authorization" => $Authorization
-            // ]);
+            $request->session()->regenerate();
+            return response()->json([
+                "student" => $studentinfo,
+                "Authorization" => $Authorization
+            ]);
             
            // $request->session()->regenerate();
 
-            return view('student.home');
+           // return view('student.home');
         }
         return response()->json(['ok' => "wrong username or password"], 200);
-    }//done
+    }//done back and delete seesion reganration and uncomment the return response
 
 //end login finction 
 
@@ -526,7 +528,7 @@ class StudentController extends Controller
         }
 
         return response()->json(['ok' => "Task upload successfully "], 200);
-   //return redirect()->back()->with('success', 'Task submitted successfully.');
+        //return redirect()->back()->with('success', 'Task submitted successfully.');
     }//done tset with web_security and web_deveolmpent tasks 
 
 
@@ -576,46 +578,6 @@ class StudentController extends Controller
     }//done //get project that has no status yet  
 
 
-//start of StudentJoinProjects
-//student send requst to project as indevisual 
-
-    // public function student_project_request(Request $request){ 
-    //     // $Authorization = request()->header('Authorization');
-    //     // if (!$Authorization) {
-    //     //     return response()->json(['error' => 'Unauthorized'], 401);
-    //     // }
-    //     // // Validate authorization token with client guard
-    //     // $student = Student::where('Authorization', $Authorization)->first();
-    //     // if (!$student) {
-    //     //     return response()->json(['error' => 'Invalid token'], 401);
-    //     // }
-    //     //$student_id = $student->student_id;
-    //     $student_id = Auth::guard('student')->id();
-
-    //     $rank = DB::table('student_ranks')->where('student_id', $student_id)->first();
-    //     $user = DB::table('students')->where('student_id', $student_id)->first();
-    //     $project_id = $request->project_id;
-    //     $project = Client_projects::find($project_id);
-    //     $userpoint= $rank->points;
-    //     $project_rank = DB::table('global_ranks')->where('rank', $project->rank)->first();  
-    //    // $clientinfo= DB::table('clients')->where('client_id', $project->client_id)->first();
-    //     if ($project_rank->start_points<=$userpoint){
-    //         $request = StudentJoinProject::create([
-    //             'project_id' => $project_id,
-    //             'project_title' => $project->title,
-    //             'client_id'=> $project->client_id,
-    //             'student_id' => $user->student_id,
-    //             'student_name' => $user->username,
-    //             'student_role'=>$user->role
-    //         ]);
-    //         $request->save();
-    //     }
-    //     else{
-    //         return response()->json(['ok' => "you cant join to this project keep rocking until you be able to join   "], 200);
-    //     }
-          
-    // }//do it tomorow 
-
     public function student_project_request(Request $request){ 
         $Authorization = request()->header('Authorization');
         if (!$Authorization) {
@@ -662,82 +624,48 @@ class StudentController extends Controller
 //end of StudentJoinProjects
 //start of team send join project request 
     public function team_project_request(Request $request){
-         $student_id = Auth::guard('student')->user()->student_id;
-         $user = Auth::user();
-         $project_id = $request->project_id;
-         $project = Client_projects::find($project_id);
-     
-         // Check if the current student has created a team
-         
-         $team = DB::table('student_teams')->where('student_id', $student_id)->first();
-         $team_leader = DB::table('teams')->where('team_id', $team->team_id)->first();
-     
-         if (!$team) {
-             return response()->json(['error' => "You have not created a team. Please create a team first"], 403);
-         }
-         
-         // Check if the team has already sent a request to join this project
-         $team_join_project = DB::table('team_join_projects')
-                                 ->where('team_id', $team->team_id)
-                                 ->where('project_id', $project_id)
-                                 ->first();
-         
-         if ($team_join_project) {
-             return response()->json(['error' => "You have already sent a request to join this project"], 403);
-         }
-     
-         // Allow the team to send a request to join a new project
-         $existing_team_join_projects = DB::table('team_join_projects')
-                                 ->where('team_id', $team->team_id)
-                                 ->get();
-     
-         foreach ($existing_team_join_projects as $existing_team_join_project) {
-             if ($existing_team_join_project->project_id == $project_id) {
-                 return response()->json(['error' => "You have already sent a request to join this project"], 403);
-             }
-         }
-     
-         $request = TeamJoinProject::create([
-             'project_id' => $project_id,
-             'project_title' => $project->title,
-             'team_id' => $team->team_id,
-         ]);
-     
-         return response()->json(['ok' => "Your request has been sent successfully"], 200);
-    } //do it tomorow 
 
-     //end of team send join project request 
-    //good but organize it 
-// public function team_project_request(Request $request){
-// $student_id = Auth::guard('student')->user()->student_id;
-// $user = Auth::user();
-// $project_id = $request->project_id;
-// $project = Client_projects::find($project_id);
-// $teams = DB::table('student_teams')->where('student_id', $student_id)->get();
-// foreach($teams as $team){$team_leader=$team->team_leader;$team_id_exist=$team->team_id;}
-// $team_projects = DB::table('team_join_projects')->where('team_id', $team_id_exist)->get();
-// //echo $team_projects;
-// if ($team_projects->isEmpty()){
-// //echo $temp;
-// if($teams->count() > 0){
-//     if($team_leader == 1 ){
-//     $request = TeamJoinProject::create([
-//         'project_id' => $project_id,
-//         'project_title' => $project->title,
-//         'team_id' => $teams->first()->team_id,
-//     ]);
-//     //echo $request;
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $project_id = $request->project_id;
+        $project = Client_projects::find($project_id);
+        // Check if the current student has created a team
+        $team = DB::table('student_teams')->where('student_id', $student_id)->first();
+        $team_leader = DB::table('teams')->where('team_leader', $student_id)->exists();
  
-//     //$request->save();
+        if (!$team) {
+            return response()->json(['error' => "You have not created a team. Please create a team first"], 403);
+        } elseif (!$team_leader) {
+            return response()->json(['error' => "You are not the team leader. Only the team leader can send requests."], 403);
+        }
 
-//     return redirect()->route('home')->with('success', 'Your request has been sent successfully');
-// }
-// } else{
-//     return redirect()->route('home')->with('error', 'You are not on a team');
-// }
-// }
-// }
+        // Check if the team has already sent a request to join this project
+        $team_join_project = DB::table('team_join_projects')
+                                ->where('team_id', $team->team_id)
+                                ->where('project_id', $project_id)
+                                ->first();
 
+        if ($team_join_project) {
+            return response()->json(['error' => "You have already sent a request to join this project"], 403);
+        }
+ 
+        $request = TeamJoinProject::create([
+            'project_id' => $project_id,
+            'project_title' => $project->title,
+            'team_id' => $team->team_id,
+        ]);
+ 
+        return response()->json(['ok' => "Your request has been sent successfully"], 200);
+    }//done
+ 
 //end of user request to join to project 
 
 
@@ -746,21 +674,29 @@ class StudentController extends Controller
 
 
     //make this to grep team mebers 
-    public function get_teams(){
-        $teams = DB::table('teams')->first();
-        //$userIds = json_decode($team->team_members); 
-        //echo $userIds;
-        foreach ($teams as $team) {
+    public function get_team_members(Request $request){
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $team_leader = Team::where('team_leader', $student_id)->exists();
 
-            return response()->json([
-                'attributes'=>[
-                    'id'=>$teams->id,
-                    'team_members'=>$teams->team_members,
-            ]
-                ]);
+        $team_members = StudentTeam::where('student_teams.team_id', $student->team_id)
+                ->join('students', 'student_teams.student_id', '=', 'students.student_id')
+                ->join('student_ranks','student_ranks.student_id','=','students.student_id'  )
+                ->get(['students.student_id', 'students.username', 'students.role','student_ranks.rank']);
 
-            }
-    }
+        return response()->json([
+            'team_members' => $team_members,
+            'team_leader'=>$team_leader
+        ]);
+    }//done with team leader value 
 
     public function test(Request $request){
         echo "holla";

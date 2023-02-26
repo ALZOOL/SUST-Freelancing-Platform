@@ -148,16 +148,15 @@ class ManagerController extends Controller
             'email' => 'required',
             'password' => 'required',
         ]);
-        if (Auth::guard('teacher')->attempt(['email' => $request->email, 'password' => $request->password])) {
-           echo "holla";
-            // $request->session()->regenerate();
-            // return view('manager.teacher_home');
+        if (Auth::guard('teacher')->attempt(['email' => $request->email, 'password' => $request->password, 'role' => 'Teacher'])) {
+            $request->session()->regenerate();
+            return view('manager.teacher_home');
             //return redirect()->intended('/');
         }
 
-        // return back()->withErrors([
-        //     'password' => 'Wrong username or password',
-        // ]);
+        return back()->withErrors([
+            'password' => 'Wrong username or password',
+        ]);
     }
     public function teacher_logout(Request $request)
     {

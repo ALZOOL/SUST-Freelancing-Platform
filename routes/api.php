@@ -49,6 +49,10 @@ Route::controller(StudentController::class)->group(function(){
     
     //SHOW CLIENTS PROJECTS TO STUDENTS
     Route::get('student/projects',  'projects')->name('projects');
+
+    Route::get('student/get_team_members',  'get_team_members')->name('get_team_members');
+
+    
     
     //STUDENT JOINING CLIENTS PROJECTS AS TEAM OR SINGLE STUDENTS
     Route::post('student/student_project_request',  'student_project_request')->name('student_project_request');
