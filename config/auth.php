@@ -87,14 +87,6 @@ return [
     */
 
     'providers' => [
-        'admin' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Manager::class,
-        ],
-        'teacher' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Manager::class,
-        ],
         'student' => [
             'driver' => 'eloquent',
             'model' => App\Models\Student::class,

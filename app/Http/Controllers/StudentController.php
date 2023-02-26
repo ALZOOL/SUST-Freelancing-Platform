@@ -83,14 +83,14 @@ class StudentController extends Controller
             }
             $student->Authorization = $Authorization;
             $student->save(); 
-            return response()->json([
-                "student" => $studentinfo,
-                "Authorization" => $Authorization
-            ]);
+            // return response()->json([
+            //     "student" => $studentinfo,
+            //     "Authorization" => $Authorization
+            // ]);
             
            // $request->session()->regenerate();
 
-           // return view('student.home');
+            return view('student.home');
         }
         return response()->json(['ok' => "wrong username or password"], 200);
     }//done
@@ -213,7 +213,7 @@ class StudentController extends Controller
             }
         
         }
-//end of rank function  //do it tomworo 
+//end of rank function  //do it tomorow 
 
 
 
@@ -231,7 +231,7 @@ class StudentController extends Controller
             ]
                 ]);
             }
-} //add join with message and also 
+} //add join with message and also do it tomorow
 //end of notification function 
 
 
@@ -578,43 +578,86 @@ class StudentController extends Controller
 
 //start of StudentJoinProjects
 //student send requst to project as indevisual 
+
+    // public function student_project_request(Request $request){ 
+    //     // $Authorization = request()->header('Authorization');
+    //     // if (!$Authorization) {
+    //     //     return response()->json(['error' => 'Unauthorized'], 401);
+    //     // }
+    //     // // Validate authorization token with client guard
+    //     // $student = Student::where('Authorization', $Authorization)->first();
+    //     // if (!$student) {
+    //     //     return response()->json(['error' => 'Invalid token'], 401);
+    //     // }
+    //     //$student_id = $student->student_id;
+    //     $student_id = Auth::guard('student')->id();
+
+    //     $rank = DB::table('student_ranks')->where('student_id', $student_id)->first();
+    //     $user = DB::table('students')->where('student_id', $student_id)->first();
+    //     $project_id = $request->project_id;
+    //     $project = Client_projects::find($project_id);
+    //     $userpoint= $rank->points;
+    //     $project_rank = DB::table('global_ranks')->where('rank', $project->rank)->first();  
+    //    // $clientinfo= DB::table('clients')->where('client_id', $project->client_id)->first();
+    //     if ($project_rank->start_points<=$userpoint){
+    //         $request = StudentJoinProject::create([
+    //             'project_id' => $project_id,
+    //             'project_title' => $project->title,
+    //             'client_id'=> $project->client_id,
+    //             'student_id' => $user->student_id,
+    //             'student_name' => $user->username,
+    //             'student_role'=>$user->role
+    //         ]);
+    //         $request->save();
+    //     }
+    //     else{
+    //         return response()->json(['ok' => "you cant join to this project keep rocking until you be able to join   "], 200);
+    //     }
+          
+    // }//do it tomorow 
+
     public function student_project_request(Request $request){ 
-    $id = Auth()->id();//get user id from currunt session
-    $ranks = DB::table('student_ranks')->where('student_id', $id)->get();
-    $users = DB::table('students')->where('student_id', $id)->get();
-    foreach ($ranks as $rank) {
-        foreach ($users as $user) {
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $rank = DB::table('student_ranks')->where('student_id', $student_id)->first();
+        $user = DB::table('students')->where('student_id', $student_id)->first();
         $project_id = $request->project_id;
         $project = Client_projects::find($project_id);
-        $project_rank=$project->rank;
         $userpoint= $rank->points;
-        $project_ranks = DB::table('global_ranks')->where('rank', $project_rank)->get();  
-        
-        //echo $project_ranks;
-        foreach ($project_ranks as $project_rank) {
-            $clientinfos= DB::table('clients')->where('client_id', $project->client_id)->get();
-            foreach($clientinfos as $clientinfo){
-            //echo $project_ranks;
-                if ($project_rank->start_points<=$userpoint){
-                    $request = StudentJoinProject::create([
-                        'project_id' => $project_id,
-                        'project_title' => $project->title,
-                        'client_id'=> $project->client_id,
-                        'student_id' => $user->student_id,
-                        'student_name' => $user->username,
-                        'student_role'=>$user->role
-                    ]);
-                    $request->save();
-                    }
-                    else{
-                        echo "you cant join to this project keep rocking until you be able to join ";
-                    }
-            }
-           
+        $project_rank = DB::table('global_ranks')->where('rank', $project->rank)->first();
+    
+        // Check if user has already requested to join the project
+        $existing_request = StudentJoinProject::where('project_id', $project_id)
+                                                ->where('student_id', $student_id)
+                                                ->first();
+        if ($existing_request) {
+            return response()->json(['error' => "You have already sent a request to join this project."], 400);
         }
+    
+        if ($project_rank->start_points<=$userpoint){
+            $request = StudentJoinProject::create([
+                'project_id' => $project_id,
+                'project_title' => $project->title,
+                'client_id'=> $project->client_id,
+                'student_id' => $user->student_id,
+                'student_name' => $user->username,
+                'student_role'=>$user->role
+            ]);
+            $request->save();
+            return response()->json(['ok' => "request send successfully  "], 200);
+        } else {
+            return response()->json(['ok' => "you cant join to this project keep rocking until you be able to join   "], 200);
         }
-    }
-}
+    }//done 
+    
 //end of user join project indevitual 
 //end of StudentJoinProjects
 //start of team send join project request 
@@ -661,7 +704,7 @@ class StudentController extends Controller
          ]);
      
          return response()->json(['ok' => "Your request has been sent successfully"], 200);
-     }
+    } //do it tomorow 
 
      //end of team send join project request 
     //good but organize it 
@@ -758,7 +801,7 @@ class StudentController extends Controller
         ]);
         $users = Auth()->id();
         $team->users()->attach($users);
-    }
+    }//done
 
     
     public function join_team(){
@@ -787,7 +830,7 @@ class StudentController extends Controller
         $team = Team::where('invitation_link', $invitation_link)->first();
         
         $team->users()->attach($student_id,['team_id'=>$team->team_id],['team_leader' => 0 ]);
-    }
+    }//done
     
     //midle ware
 // public function __construct()
