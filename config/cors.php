@@ -19,8 +19,8 @@ return [
     'paths' => ['*'],
     'allowed_methods' => ['*'],
 
-    //'allowed_origins' => ['*'],
-    'allowed_origins' => [env('FRONTEND_URL'),'http://localhost:8080'],
+    'allowed_origins' => ['*'],
+    //'allowed_origins' => ['http://localhost:8080'],
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],

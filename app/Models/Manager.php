@@ -47,4 +47,9 @@ class Manager extends Authenticatable
      */
     protected $casts = [
     ];
+    public function getRoleAttribute()
+{
+    return $this->attributes['role'];
+}
+
 }

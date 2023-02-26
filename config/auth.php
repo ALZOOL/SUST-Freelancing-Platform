@@ -36,14 +36,6 @@ return [
     */
 
     'guards' => [
-        'admin' => [
-            'driver' => 'session',
-            'provider' => 'admin',
-        ],
-        'teacher' => [
-            'driver' => 'session',
-            'provider' => 'teacher',
-        ],
         'student' => [
             'driver' => 'session',
             'provider' => 'student',
@@ -55,12 +47,12 @@ return [
         ],
         'teacher' => [
             'driver' => 'session',
-            'provider' => 'managers',
+            'provider' => 'manager',
             'role' => 'teacher',
         ],
         'admin' => [
             'driver' => 'session',
-            'provider' => 'managers',
+            'provider' => 'manager',
             'role' => 'admin',
         ],
         'client' => [
@@ -94,6 +86,8 @@ return [
         'manager' => [
             'driver' => 'eloquent',
             'model' => App\Models\Manager::class,
+            'table' => 'managers',
+            'role_column' => 'role'
         ],
         'client' => [
             'driver' => 'eloquent',
