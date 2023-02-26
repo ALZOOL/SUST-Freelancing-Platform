@@ -64,7 +64,11 @@ Route::controller(StudentController::class)->group(function(){
     
     Route::get('student/submitTasks',  'submitTasks')->name('submitTasks');
     Route::post('student/submitTask',  'submitTask')->name('submitTask');
-    Route::get('student/last_solved',  'last_solved')->name('last_solved');  
+    Route::get('student/last_solved',  'last_solved')->name('last_solved');
+    
+    Route::get('student/notifications',  'notifications')->name('notifications');
+    
+    
 });
 
 Route::controller(ClientController::class)->group(function(){

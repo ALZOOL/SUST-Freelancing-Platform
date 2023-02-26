@@ -15,11 +15,13 @@ class InterviewRequest extends Authenticatable
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'student_id',
         'first_name',
         'last_name',
         'username',
         'role',
         'current_rank',
-        'next_rank'
+        'next_rank',
+        'status'
     ];
 }

@@ -83,6 +83,7 @@ class StudentController extends Controller
                 $authorizationExists = DB::table('students')->where('Authorization', $Authorization)->exists();
             }
             $student->Authorization = $Authorization;
+            $student->last_login_at = now();
             $student->save(); 
             $request->session()->regenerate();
             return response()->json([
@@ -159,81 +160,88 @@ class StudentController extends Controller
         
          }
     }//done
-
     public function upgrade_rank(Request $request){
-            $id = Auth::guard('student')->user()->student_id ;//get user id from currunt session 
-            $users = DB::table('students')->where('student_id', $id)->get();
-            $rank = DB::table('student_ranks')->where('student_id', $id)->get();
-            foreach ($rank as $user_rank) {
-                $current_points = $user_rank->points;
-                //echo $current_point ;
-                // return redirect()->intended('/home');
-                // $id = Auth()->id();//get user id from currunt session 
-                // $rank = DB::table('rank')->where('user_id', $id)->get();
-                // $current_rank= $rank->rank;
-                foreach ($users as $user) {
-                if ($current_points >= 0 && $current_points <= 50) {
-                    $current_rank = 'f';
-                } elseif ($current_points > 50 && $current_points <= 100) {
-                    $current_rank = 'e';
-                }elseif ($current_points > 100 && $current_points <= 200) {
-                    $current_rank = 'd';
-                }elseif ($current_points > 200 && $current_points <= 400) {
-                    $current_rank = 'c';
-                }
-                elseif ($current_points > 400) {//requst go to manager 
-                    if ($current_points > 400  && $current_points <= 500 ){
-                        $next_rank='b';
-                    }elseif($current_points > 500  && $current_points <= 600){
-                        $next_rank='a';
-                    }elseif($current_points > 600  && $current_points <= 700){
-                        $next_rank='s';
-                    }
-                    $student_id=$user->user_id;
-                    $first_name=$user->first_name;
-                    $last_name=$user->last_name;
-                    $username=$user->username;
-                    $role=$user->role;
-                    $current_rank = $user_rank->rank ;
-                        $RRank = new InterviewRequest([
-                            'first_name' => $first_name,
-                            'last_name' => $last_name,
-                            'username' => $username,
-                            'role' => $role,
-                            'current_rank'=>$current_rank,
-                            'next_rank'=>$next_rank,
-                        ]);
-                        $RRank->save();
-                }
-            }
-                //echo $current_rank;
-                //echo $id;
-                //DB::update('update student_ranks set rank = e where student_id= 11');
-                DB::update('update student_ranks set rank = ? where student_id= ?', [$current_rank, $id]);
-                echo "Record updated successfully.";
-                //return redirect()->route('login')->with('success', 'update rank complete');
-            }
-        
+
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
-//end of rank function  //do it tomorow 
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        //$id = Auth::guard('student')->user()->student_id ;//get user id from currunt session 
+        $user = DB::table('students')->where('student_id', $student_id)->first();
+        $user_rank = DB::table('student_ranks')->where('student_id', $student_id)->first();
+        $student_global_current_rank= DB::table('global_ranks')->where('rank', $user_rank->rank)->first();
+        $student_global_next_rank=DB::table('global_ranks')->where('id', $student_global_current_rank->id+1)->first();
+        $next_start_points=$student_global_next_rank->start_points;
+        $next_end_points=$student_global_next_rank->end_points;
+        $stars_count= Star::where('student_id', $student_id)->count();
+    
+        $current_points = $user_rank->points;
+    
+            if ($current_points >= $next_start_points && $current_points <= 300) {
+                $current_rank = $student_global_next_rank->rank;
+                DB::update('update student_ranks set rank = ? where student_id= ?', [$current_rank, $student_id]);
+                return response()->json(['ok' => "Rank Upgrade Successfully "], 200);
+            }
+            elseif ($current_points >= 301) {//requst go to manager 
+                if ($stars_count >= 7 && $current_points>=1301) {
+                    $next_rank='SSS';
+                }
+                elseif($stars_count <= 3 && $current_points>=1301){
+                    $next_rank='SS';
+                }
+                elseif($current_points >= $next_start_points){
+                    $next_rank= $student_global_next_rank->rank ;
+                }
+                $first_name=$user->first_name;
+                $last_name=$user->last_name;
+                $username=$user->username;
+                $role=$user->role;
+                $current_rank = $user_rank->rank ;
+                    $RRank = new InterviewRequest([
+                        'student_id'=>$student_id,
+                        'first_name' => $first_name,
+                        'last_name' => $last_name,
+                        'username' => $username,
+                        'role' => $role,
+                        'current_rank'=>$current_rank,
+                        'next_rank'=>$next_rank,
+                        'status'=>"requested",
+                    ]);
+                    $RRank->save();
+                    return response()->json(['ok' => "Rank Upgrade Request Sent Successfully "], 200);
+            }
+
+                return response()->json(['error' => "You dont have enegh points "], 200);  
+    }//end of rank function 
+
 
 
 
 //start of notification function 
     public function notifications(){
-
-    $id = Auth()->id();//get user id from currunt session 
-    $rank = DB::table('student_notifications')->where('user_id', $id)->get();
-        foreach ($rank as $user_rank) {
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $notification = DB::table('student_notifications')->where('student_id', $student_id)
+        ->join('messages','student_notifications.message_id','=','messages.id')->orderBy("id", "desc")
+        ->get(['student_notifications.id', 'student_notifications.message_id', 'messages.message']);
         return response()->json([
-                'attributes'=>[
-                    'id'=>$user_rank->user_id,
-                    'student_id'=>$user_rank->points,
-                    'message_id'=>$user_rank->rank,
-            ]
-                ]);
-            }
-} //add join with message and also do it tomorow
+            'notifications' => $notification
+        ]);
+    } //end
 //end of notification function 
 
 
