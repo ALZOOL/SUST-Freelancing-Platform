@@ -149,6 +149,16 @@ public function getProjectsAndTeams() {
 
         $data[] = [
             'project_title' => $project->title,
+            'project_category' => $project->category,
+            'project_description' => $project->description,
+            'project_deadline' => $project->deadline,
+            'project_status' => $project->status,
+            'project_rank' => $project->rank,
+            'project_frontend' => $project->frontend,
+            'project_backend' => $project->backend,
+            'project_ui_ux' => $project->ui_ux,
+            'project_web_security' => $project->web_security,
+            'project_team_count' => $project->team_count,
             'team_id' => $project->team_id,
             'team_members' => $team_members_data
         ];

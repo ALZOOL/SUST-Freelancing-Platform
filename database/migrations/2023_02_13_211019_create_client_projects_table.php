@@ -28,7 +28,7 @@ return new class extends Migration
             $table->integer('frontend')->nullable();
             $table->integer('backend')->nullable();
             $table->integer('ui_ux')->nullable();
-            $table->integer('security')->nullable();
+            $table->integer('web_security')->nullable();
             $table->integer('team_count');
             $table->timestamps();
             
