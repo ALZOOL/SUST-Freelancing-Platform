@@ -145,13 +145,13 @@ Route::controller(ManagerController::class)->group(function(){
     Route::get('/task/edit/{id}',"edit_task")->name('task.edit');
     Route::get('/task/delete/{id}',"delete_task")->name('task.delete');
     Route::PUT('/task/update/{id}',"update_task")->name('task.update');
-
+//28 routes until here
     //SUBMITTED TASKS
     Route::get('/submitted_web',"show_web")->name('/show_web');
     Route::get('/submitted_security',"show_security")->name('/show_security');
     Route::get('/submitted_design',"show_design")->name('/show_design');
-    Route::PUT('/submitted_web/custom/{student_name}/{id}',"custom")->name('custom');
-    Route::PUT('/submitted_web/full/{student_name}/{id}',"full")->name('full');
+    Route::PUT('/custom_points/{student_id}/{task_id}',"custom")->name('custom');
+    Route::PUT('/full_points/{student_id}/{task_id}',"full")->name('full');
 
     //RANK-INTERVIEWS
     Route::get('/Rank_interview',"rank_interview_requests")->name('/rank_interview');

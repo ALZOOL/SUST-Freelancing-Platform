@@ -24,9 +24,9 @@ class Task extends Authenticatable
         'level',
         'category',
         'description',
-        'level',
-        'rank',
         'file_path',
+        'solution',
+        'rank',
         'points',
     ];
 
