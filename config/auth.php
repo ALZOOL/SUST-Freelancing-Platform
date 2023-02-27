@@ -100,7 +100,7 @@ return [
             'model' => App\Models\Client::class,
         ],
 
-        // 'users' => [
+        /// 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
