@@ -58,7 +58,7 @@
 {{-- @endauth --}}
 {{-- @guest --}}
 <a class="btn btn-primary" href="{{ route('manager_login') }}">Login</a>
-<a class="btn btn-info" href="{{ route('manager_register') }}">Register</a>
+
 @endif
 {{-- @endguest --}}
 @endsection

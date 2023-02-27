@@ -1,9 +1,10 @@
 @extends('layouts.app')
-
 @section('content')
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
+{{-- @auth('manager') --}}
+@if ( Auth::guard('manager')->check() )
+<p>Welcome <b>{{ Auth::guard('manager')->user()->name }}</b></p>
+<h1>{{ Auth::guard('manager')->user()->id }}</h1>
+<br>
                 <h1>Student Requests</h1>
                 @if(count($studentRequests) > 0)
                     <table class="table">
@@ -40,4 +41,17 @@
             </div>
         </div>
     </div>
+
+{{-- <a class="btn btn-primary" href="{{ route('password') }}">Change Password</a> --}}
+{{-- <a class="btn btn-danger" href="{{ route('logout') }}">Logout</a> --}}
+<a class="btn btn-primary" href="{{ route('admin_login') }}">Login</a>
+<a class="btn btn-danger" href="{{ route('admin_logout') }}">Logout</a>
+    
+@else
+{{-- @endauth --}}
+{{-- @guest --}}
+<a class="btn btn-primary" href="{{ route('manager_login') }}">Login</a>
+
+@endif
+{{-- @endguest --}}
 @endsection

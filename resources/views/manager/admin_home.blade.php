@@ -76,7 +76,7 @@
 {{-- @endauth --}}
 {{-- @guest --}}
 <a class="btn btn-primary" href="{{ route('admin_login') }}">Login</a>
-<a class="btn btn-info" href="{{ route('admin_register') }}">Register</a>
+
 @endif
 {{-- @endguest --}}
 @endsection

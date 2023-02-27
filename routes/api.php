@@ -93,6 +93,94 @@ Route::get('/token', function () {
     return csrf_token(); 
 });
 
+//*********************************** */
+//Manager SYSTEM
+Route::controller(ManagerController::class)->group(function(){
+    //LOGIN-LOGOUT
+    //manager
+   // Route::get('manager/login', 'manager_login')->name('manager_login');
+    Route::post('manager/login','manager_login_action')->name('manager_login.process');
+    Route::get('manager/logout', 'manager_logout')->name('manager_logout');
+    //admin
+    //Route::get('admin/login', 'admin_login')->name('admin_login');
+    Route::post('admin/login','admin_login_action')->name('admin_login.process');
+    Route::get('admin/logout', 'admin_logout')->name('admin_logout');
+    //teacher
+    //Route::get('teacher/login', 'teacher_login')->name('teacher_login');
+    Route::post('teacher/login','teacher_login_action')->name('teacher_login.process');
+    Route::get('teacher/logout', 'teacher_logout')->name('teacher_logout');
+    
+    //add-edit-delete managers and teachers
+    Route::post('admin/addmanager',"addManager");
+    Route::get('admin/count_users',"count_users");
+    Route::get('/admin/show_managers',"show_managers")->name('admin');
+   // Route::get('/admin/system_managers/edit/{id}',"edit_system_managers")->name('system_managers.edit');
+    Route::PUT('/admin/system_managers/edit/update/{id}',"update_system_managers")->name('system_managers.update');
+    Route::get('/admin/delete/{id}',"delete_system_managers")->name('system_managers.delete');
+
+    
+    //PROJECTS REQUESTS
+    Route::get('/Projects_requests',"show_projects_requests")->name('/projects_requests');
+    Route::get('/project_request/accept/{id}',"accept_project_request")->name('project_request.accept');
+    Route::get('/project_request/reject/{id}',"reject_project_request")->name('project_request.reject');
+    //APPROVED PROJECTS
+    Route::get('/Approved_projects',"show_accepted_requests")->name('/approved_projects');
+    Route::post('/publish',"publish")->name('publish');
+    Route::get('/publish/cancel/{id}/{email}',"cancel_publish")->name('publish.cancel');
+    Route::PUT('/update_status/{project_id}',"update_status")->name('status.update');
+    //ROAD-MAPS
+    //ADD-EDIT-DELETE ROAD-MAPS
+    Route::get('/Roadmaps',"show_roadmaps")->name('/Roadmaps');
+    Route::post('/addRoadmap',"addRoadmap");
+    Route::get('/roadmap/edit/{id}',"edit_roadmap")->name('roadmap.edit');
+    Route::get('/roadmaps/delete/{id}',"delete_roadmap")->name('roadmap.delete');
+    Route::PUT('/roadmaps/update/{id}',"update_roadmap")->name('roadmap.update');
+
+    //TASKS
+    //ADD-EDIT-DELETE-TASKS
+    Route::get('/Tasks',"show_tasks")->name('/Tasks');
+    Route::post('add/web_task',"add_web_task")->name('web.add');
+    Route::post('add/security_task',"add_security_task")->name('security.add');
+    Route::post('add/desgin_task',"add_desgin_task")->name('design.add');
+    Route::get('/task/edit/{id}',"edit_task")->name('task.edit');
+    Route::get('/task/delete/{id}',"delete_task")->name('task.delete');
+    Route::PUT('/task/update/{id}',"update_task")->name('task.update');
+
+    //SUBMITTED TASKS
+    Route::get('/submitted_web',"show_web")->name('/show_web');
+    Route::get('/submitted_security',"show_security")->name('/show_security');
+    Route::get('/submitted_design',"show_design")->name('/show_design');
+    Route::PUT('/submitted_web/custom/{student_name}/{id}',"custom")->name('custom');
+    Route::PUT('/submitted_web/full/{student_name}/{id}',"full")->name('full');
+
+    //RANK-INTERVIEWS
+    Route::get('/Rank_interview',"rank_interview_requests")->name('/rank_interview');
+    //Route::get('/Rank_interview2',"rank_interview")->name('/rank_interview/upgrade');
+    Route::get('/rank_interview/accept/{id}',"accept_interview_request")->name('interview_request.accept');
+    Route::get('/rank_interview/reject/{id}',"reject_interview_request")->name('interview_request.reject');
+    Route::PUT('/rank/update/{id}/{next_rank}',"upgrade_rank")->name('rank.upgrade');
+    Route::get('/rank/update/cancel/{id}',"cancel_rank_upgrading")->name('rank_upgrading.cancel');
+    //Route::PUT('/rank.upgrade/{id}/{next_rank}');
+
+    //TEAM REQUESTS AND TEAMS JOINING
+    Route::get('/Team_requests',"team_requests")->name('/team_requests');
+    Route::get('/Team_requests/accepted',"accepted_team_requests")->name('/team_requests');
+
+    Route::post('/add_student_to_project',"add_student_to_project")->name('add_student_to_project');
+    
+    Route::get('/team_join_projects',"team_join_projects")->name('team_join_projects');
+    Route::post('/add_team_to_project',"add_team_to_project")->name('add_team_to_project');
+    
+    
+   
+    Route::PUT('/team/accept_single/{id}',"accept_single_student")->name('accept_single.team');
+    Route::PUT('/team/accept_full/{id}',"accept_full_team")->name('accept_full.team');
+    
+
+});
+//#####################
+//*************************** */
+
 // <<<<<<< HEAD
 // Route::controller(TaskController::class)->group(function(){
 
@@ -109,4 +197,6 @@ Route::get('/token', function () {
 
 // =======
 // >>>>>>> da2e3b8fd9c8ea397fc4f7df9f070f8bfef2e619
+
+
 ?>

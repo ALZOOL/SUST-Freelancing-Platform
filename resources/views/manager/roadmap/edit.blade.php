@@ -1,6 +1,8 @@
 @extends('layouts.app')
-
 @section('content')
+{{-- @auth('teacher') --}}
+@if ( Auth::guard('teacher')->check() )
+<p>Welcome <b>{{ Auth::guard('teacher')->user()->name }}</b></p>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -44,4 +46,11 @@
 
 
 </form>
+@else
+{{-- @endauth --}}
+{{-- @guest --}}
+<a class="btn btn-primary" href="{{ route('login') }}">Login</a>
+
+@endif
+{{-- @endguest --}}
 @endsection

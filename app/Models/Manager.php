@@ -26,8 +26,8 @@ class Manager extends Authenticatable
         'first_name',
         'last_name',
         'email',
-        'password',
         'role',
+        'password',
         'Authorization'
     ];
 

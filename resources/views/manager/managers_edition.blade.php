@@ -1,6 +1,10 @@
 @extends('layouts.app')
-
 @section('content')
+{{-- @auth('manager') --}}
+@if ( Auth::guard('manager')->check() )
+<p>Welcome <b>{{ Auth::guard('manager')->user()->name }}</b></p>
+<h1>{{ Auth::guard('manager')->user()->id }}</h1>
+<br>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -50,4 +54,16 @@
 
 
 </form>
+{{-- <a class="btn btn-primary" href="{{ route('password') }}">Change Password</a> --}}
+{{-- <a class="btn btn-danger" href="{{ route('logout') }}">Logout</a> --}}
+<a class="btn btn-primary" href="{{ route('admin_login') }}">Login</a>
+<a class="btn btn-danger" href="{{ route('admin_logout') }}">Logout</a>
+    
+@else
+{{-- @endauth --}}
+{{-- @guest --}}
+<a class="btn btn-primary" href="{{ route('admin_login') }}">Login</a>
+
+@endif
+{{-- @endguest --}}
 @endsection

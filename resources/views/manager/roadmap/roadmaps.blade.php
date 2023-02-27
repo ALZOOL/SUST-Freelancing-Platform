@@ -1,8 +1,8 @@
 @extends('layouts.app')
 @section('content')
-{{-- @auth('client') --}}
-@if ( Auth::guard('manager')->check() )
-<p>Welcome <b>{{ Auth::guard('manager')->user()->name }}</b></p>
+{{-- @auth('teacher') --}}
+@if ( Auth::guard('teacher')->check() )
+<p>Welcome <b>{{ Auth::guard('teacher')->user()->name }}</b></p>
 <h1>roadmaps</h1>
 <br><br>
 <div>
@@ -40,7 +40,7 @@
   	@foreach($users as $user)
     	<tr>
 	      <td> {{ $user->id }}</td>
-        <td> {{ $user->name }}</td>
+        
 	      <td>{{ $user->title }}</td>
         <td>{{ $user->category }}</td>
 	      <td>{{ $user->description }}</td>
@@ -58,7 +58,7 @@
 {{-- @endauth --}}
 {{-- @guest --}}
 <a class="btn btn-primary" href="{{ route('login') }}">Login</a>
-<a class="btn btn-info" href="{{ route('register') }}">Register</a>
+
 @endif
 {{-- @endguest --}}
 @endsection

@@ -1,6 +1,10 @@
 @extends('layouts.app')
-
 @section('content')
+{{-- @auth('manager') --}}
+@if ( Auth::guard('manager')->check() )
+<p>Welcome <b>{{ Auth::guard('manager')->user()->name }}</b></p>
+<h1>{{ Auth::guard('manager')->user()->id }}</h1>
+<br>
 @if ($studentRequests)
     @foreach($studentRequests as $request)
         <tr>
@@ -23,3 +27,18 @@
         <td colspan="4">No team join requests found.</td>
     </tr>
 @endif
+
+
+{{-- <a class="btn btn-primary" href="{{ route('password') }}">Change Password</a> --}}
+{{-- <a class="btn btn-danger" href="{{ route('logout') }}">Logout</a> --}}
+<a class="btn btn-primary" href="{{ route('admin_login') }}">Login</a>
+<a class="btn btn-danger" href="{{ route('admin_logout') }}">Logout</a>
+    
+@else
+{{-- @endauth --}}
+{{-- @guest --}}
+<a class="btn btn-primary" href="{{ route('manager_login') }}">Login</a>
+
+@endif
+{{-- @endguest --}}
+@endsection

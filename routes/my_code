@@ -1,0 +1,39 @@
+            //########## auth the user function start
+            $admin = Manager::where('email', $request->email)->first();
+            $admininfo=Manager::where('email', $request->email)->select('first_name', 'last_name', 'email', 'role')->first();
+            $authorizationExists = true;
+            while ($authorizationExists) {
+                $Authorization = Str::random(40);
+                $authorizationExists = DB::table('managers')->where('Authorization', $Authorization)->exists();
+            }
+            $admin->Authorization = $Authorization;
+            $admin->save(); 
+            //return data to front
+              return response()->json([
+                "manager" => $admininfo,
+                "Authorization" => $Authorization
+            ]);
+            //#######//########## auth user function end
+            return response()->json(['ok' => "wrong username or password"], 200);
+
+
+            //###### auth user logout function start
+            $Authorization = $request->header('Authorization');
+            if (!$Authorization) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+            $manager = Manager::where('Authorization', $Authorization)->first();
+            if (!$manager) {
+                return response()->json(['error' => 'Invalid token'], 401);
+            }
+            //###### auth logout function end
+    
+            $manager->update(['Authorization' => null]);
+    
+            Auth::guard('manager')->logout();
+            return response()->json(['ok' => "logout successfully"], 200);
+
+
+            return response()->json([
+            'data' => $data
+     ]);  
