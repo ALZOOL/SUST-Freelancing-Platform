@@ -107,8 +107,8 @@ Route::controller(ManagerController::class)->group(function(){
     Route::get('admin/logout', 'admin_logout')->name('admin_logout');
     //teacher
     //Route::get('teacher/login', 'teacher_login')->name('teacher_login');
-    Route::post('teacher/login','teacher_login_action')->name('teacher_login.process');
-    Route::get('teacher/logout', 'teacher_logout')->name('teacher_logout');
+    //Route::post('teacher/login','teacher_login_action')->name('teacher_login.process');
+    //Route::get('teacher/logout', 'teacher_logout')->name('teacher_logout');
     
     //add-edit-delete managers and teachers
     Route::post('admin/addmanager',"addManager");

@@ -35,7 +35,7 @@ class ManagerController extends Controller
             'email' => 'required',
             'password' => 'required',
         ]);
-        if (Auth::guard('manager')->attempt(['email' => $request->email, 'password' => $request->password,'role'=>'manager']))
+        if (Auth::guard('manager')->attempt(['email' => $request->email, 'password' => $request->password,'role'=>['manager','teacher']]))
          {
             //########## auth the function
             $manager = Manager::where('email', $request->email)->first();
@@ -1047,7 +1047,7 @@ class ManagerController extends Controller
 
 
     //****************************** */
-    //SUBMITTED TASKS
+    //SUBMITTED TASKS 
     //SHOW SUBMITTED-TASKS
 
     public function show_web(){
