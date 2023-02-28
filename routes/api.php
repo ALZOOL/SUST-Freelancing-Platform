@@ -183,7 +183,7 @@ Route::controller(ManagerController::class)->group(function(){
     Route::post('manager/add_team_to_project',"add_team_to_project")->name('add_team_to_project');
     
     
-   
+   //tst
     // Route::PUT('manager/team/accept_single/{id}',"accept_single_student")->name('accept_single.team');
     // Route::PUT('manager/team/accept_full/{id}',"accept_full_team")->name('accept_full.team');
     
