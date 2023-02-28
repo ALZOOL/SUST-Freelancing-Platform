@@ -359,7 +359,7 @@ class ManagerController extends Controller
              ]);
     }
 
-    public function update_system_managers(Request $request,$id){
+    public function update_system_managers(Request $request){
 
     	 //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -371,7 +371,7 @@ class ManagerController extends Controller
              return response()->json(['error' => 'Invalid token'], 401);
          }
          //###### auth logout function end
-        DB::table('managers')->where('id',$id)->update([
+        DB::table('managers')->where('id',$request->id)->update([
 
     		'first_name'=>$request->first_name,
             'last_name'=>$request->last_name,
@@ -383,9 +383,9 @@ class ManagerController extends Controller
         return response()->json([
             'manager edited successfully'
              ]);
-    } //done
+    } //done test it
 
-    public function delete_system_managers(Request $request,$id){
+    public function delete_system_managers(Request $request){
 
          //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -398,13 +398,13 @@ class ManagerController extends Controller
          }
          //###### auth logout function end
 
-        DB::table('managers')->where('id',$id)->delete();
-        $users = DB::table('managers')->where('role', 'Manager')->orwhere('role', 'Teacher')->get();
+        DB::table('managers')->where('id',$request->id)->delete();
+       // $users = DB::table('managers')->where('role', 'Manager')->orwhere('role', 'Teacher')->get();
         return response()->json([
-            'manager deleted successfuly' => $users
+            'manager deleted successfuly'
              ]);  
 
-    }//done
+    }//done  //test it 
 
     //####################
 
@@ -439,7 +439,7 @@ class ManagerController extends Controller
 
     //ACCEPT-PROJECT-REQUEST
 
-    public function accept_project_request(Request $request,$id)
+    public function accept_project_request(Request $request)
     {
 
           //###### auth user logout function start
@@ -453,7 +453,7 @@ class ManagerController extends Controller
           }
           //###### auth logout function end
 
-        $result = DB::table('client_project_requests')->where('id',$id)->first();
+        $result = DB::table('client_project_requests')->where('id',$request->id)->first();
         $data=new Accepted_clients_request;
 
         $data->id=$result->id;
@@ -469,19 +469,19 @@ class ManagerController extends Controller
         $data_2->message_id=4;
         echo $data_2;
         $data_2->save();
-        DB::table('client_project_requests')->where('id',$id)->delete();
+        DB::table('client_project_requests')->where('id',$request->id)->delete();
         return response()->json([
             'request accepted successfuly' => $result
         ]);    
         
         //return view('projects_requests');
         //return view('ManagerDashboard.projects_requests');
-    }//done
+    }//done //test it 
     
     //####################
 
     //REJECT PROJECTs REQUESTS
-    public function reject_project_request(Request $request,$id){
+    public function reject_project_request(Request $request){
 
           //###### auth user logout function start
           $Authorization = $request->header('Authorization');
@@ -494,7 +494,7 @@ class ManagerController extends Controller
           }
           //###### auth logout function end
 
-        $result = DB::table('client_project_requests')->where('id',$id)->first();
+        $result = DB::table('client_project_requests')->where('id',$request->id)->first();
         //$result_2 = DB::table('clients')->where('email',$result->client_email)->first();
          //sending messages to notifications table
          $data_2=new ClientNotification;
@@ -502,13 +502,13 @@ class ManagerController extends Controller
          $data_2->message_id=$request->reject;
           //echo $data_2;
          $data_2->save();
-         DB::table('client_project_requests')->where('id',$id)->delete();
+         DB::table('client_project_requests')->where('id',$request->id)->delete();
          return response()->json([
             'request rejected successfuly' => $result
         ]);    
          //return response()->json(['ok' => "client project has been rejected "], 200);
  
-    }//done
+    }//done test it 
      
      //###################
  
@@ -624,7 +624,7 @@ class ManagerController extends Controller
     //########################
 
     //CANCELING PROJECTS PUBLISHING
-    public function cancel_publish(Request $request,$id,$email){
+    public function cancel_publish(Request $request){
 
          //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -638,25 +638,25 @@ class ManagerController extends Controller
          //###### auth logout function end
 
         //$result = DB::table('accepted_clients_requests')->where('id',$request->id)->first();
-        $result_2 = DB::table('clients')->where('email',$email)->first();
+        $result_2 = DB::table('clients')->where('email',$request->email)->first();
          //sending messages to notifications table
          $data_2=new ClientNotification;
          $data_2->client_id=$result_2->client_id;
          $data_2->message_id=$request->cancel;
           
          $data_2->save();
-         DB::table('accepted_clients_requests')->where('id',$id)->delete();
+         DB::table('accepted_clients_requests')->where('id',$request->id)->delete();
 
          return response()->json([
             'project publishing canceld successfuly' => $result_2
         ]);    
  
-    }//done
+    }//done test it 
      
      //###################
      
      //UPDATE PROJECT PROGRESS STATUS
-     public function update_status(Request $request,$project_id){
+     public function update_status(Request $request){
 
          //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -669,16 +669,16 @@ class ManagerController extends Controller
          }
          //###### auth logout function end
 
-        $team_id=DB::table('client_projects')->where('id',$project_id)->first();
+        $team_id=DB::table('client_projects')->where('id',$request->project_id)->first();
         $team_check= $team_id->team_id;
 
-        $max_allowed = DB::table('client_projects')->where('id',$project_id)->first();
+        $max_allowed = DB::table('client_projects')->where('id',$request->project_id)->first();
         $student_count = DB::table('projects_team_members')->where('team_id',$team_check)->get();
         //$users_all_2 = ProjectsTeam::all()->toArray();
         $max_allowed_2=$max_allowed->team_count;
         $student_count_2=count($student_count);
         if(!empty($student_count_2>=$max_allowed_2)) { 
-            DB::table('client_projects')->where('id',$project_id)->update([
+            DB::table('client_projects')->where('id',$request->project_id)->update([
 
                 'status'=>$request->status,
             ]);
@@ -691,7 +691,7 @@ class ManagerController extends Controller
             ]);  
         }
         
-    }//done
+    }//done test it 
      //##############################
 
     //**************************************
@@ -787,7 +787,7 @@ class ManagerController extends Controller
     //################
 
     //EDIT DELETE ROAD-MAPS
-    public function edit_roadmap(Request $request,$id){
+    public function edit_roadmap(Request $request){
 
         //###### auth user logout function start
         $Authorization = $request->header('Authorization');
@@ -801,11 +801,11 @@ class ManagerController extends Controller
         }
         //###### auth logout function end
 
-    	$myRoadmap = DB::table('roadmaps')->where('id',$id)->first();
+    	$myRoadmap = DB::table('roadmaps')->where('id',$request->id)->first();
     	return view('manager.roadmap.edit',compact('myRoadmap'));
-    }
+    } //done test it 
 
-    public function update_roadmap(Request $request,$id){
+    public function update_roadmap(Request $request){
 
         //###### auth user logout function start
         $Authorization = $request->header('Authorization');
@@ -819,7 +819,7 @@ class ManagerController extends Controller
         }
         //###### auth logout function end
 
-    	DB::table('roadmaps')->where('id',$id)->update([
+    	DB::table('roadmaps')->where('id',$request->id)->update([
 
     		'title'=>$request->title,
             'category'=>$request->category,
@@ -828,9 +828,9 @@ class ManagerController extends Controller
     	return response()->json([
             'Roadmap edited successfuly'
         ]);
-    } //done
+    } //done test it 
 
-    public function delete_roadmap(Request $request,$id){
+    public function delete_roadmap(Request $request){
 
          //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -844,12 +844,12 @@ class ManagerController extends Controller
          }
          //###### auth logout function end
 
-        DB::table('roadmaps')->where('id',$id)->delete();
+        DB::table('roadmaps')->where('id',$request->id)->delete();
         //DB::table('posts')->truncate();
         return response()->json([
             'Roadmap deleted successfuly'
         ]); 
-    }//done
+    }//done test it 
 
     //####################
     //****************************** */
@@ -1004,9 +1004,9 @@ class ManagerController extends Controller
     public function edit_task($id){
     	$myTask = DB::table('tasks')->where('id',$id)->first();
     	return view('manager.task.edit',compact('myTask'));
-    }
+    } //view 
 
-    public function update_task(Request $request,$id){
+    public function update_task(Request $request){
 
          //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -1019,7 +1019,7 @@ class ManagerController extends Controller
          }
          //###### auth logout function end
 
-    	DB::table('tasks')->where('id',$id)->update([
+    	DB::table('tasks')->where('id',$request->id)->update([
 
     		'title'=>$request->title,
             'level'=>$request->level,
@@ -1033,9 +1033,9 @@ class ManagerController extends Controller
         return response()->json([
             "Task edited successfuly"
          ]); 
-    } //done
+    } //done test it 
 
-    public function delete_task(Request $request,$id){
+    public function delete_task(Request $request){
 
          //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -1048,13 +1048,13 @@ class ManagerController extends Controller
          }
          //###### auth logout function end
 
-        DB::table('tasks')->where('id',$id)->delete();
+        DB::table('tasks')->where('id',$request->id)->delete();
         //DB::table('posts')->truncate();
         return response()->json([
             "Task deleted successfuly"
          ]); 
 
-    } //done
+    } //done test it 
     //####################
     //****************************** */
 
@@ -1175,7 +1175,7 @@ class ManagerController extends Controller
 
     //CUSTOM-POINTS
 
-    public function custom(Request $request,$student_id,$task_id){
+    public function custom(Request $request){
 
          //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -1188,15 +1188,15 @@ class ManagerController extends Controller
          }
          //###### auth logout function end
 
-        $users = DB::table('student_ranks')->where('student_id', '=', $student_id)->value('points');
+        $users = DB::table('student_ranks')->where('student_id', '=', $$request->student_id)->value('points');
         $x = $users;
         $y=$request->header('custom_points');
         $z=$x+$y;
-    	DB::table('student_ranks')->where('student_id',$student_id)->update([
+    	DB::table('student_ranks')->where('student_id',$$request->student_id)->update([
     		'points'=>$z,
     	]);
 
-        DB::table('student_solved_tasks')->where('student_id',$student_id)->where('task_id',$task_id)->update([
+        DB::table('student_solved_tasks')->where('student_id',$$request->student_id)->where('task_id',$request->task_id)->update([
     		'points'=>$y,]);
     	//DB::table('submitted_tasks')->where('id',$id)->delete();
         return response()->json([
@@ -1208,7 +1208,7 @@ class ManagerController extends Controller
 
     //FULL-POINTS
 
-    public function full(Request $request,$student_id,$task_id){
+    public function full(Request $request,$student_id){
 
          //###### auth user logout function start
          $Authorization = $request->header('Authorization');
@@ -1221,14 +1221,14 @@ class ManagerController extends Controller
          }
          //###### auth logout function end
 
-        $users = DB::table('student_ranks')->where('student_id', '=', $student_id)->value('points');
+        $users = DB::table('student_ranks')->where('student_id', '=', $request->student_id)->value('points');
         $x = $users;
         $y=$request->header('full_points');
         $z=$x+$y;
-    	DB::table('student_ranks')->where('student_id',$student_id)->update([
+    	DB::table('student_ranks')->where('student_id',$request->student_id)->update([
     		'points'=>$z,
     	]);
-        DB::table('student_solved_tasks')->where('student_id',$student_id)->where('task_id',$task_id)->update([
+        DB::table('student_solved_tasks')->where('student_id',$request->student_id)->where('task_id',$request->task_id)->update([
     		'points'=>$y,
     	]);
     	//DB::table('student_solved_tasks')->where('id',$id)->delete();
@@ -1236,7 +1236,7 @@ class ManagerController extends Controller
         return response()->json([
             'full points gived successfuly'
          ]); 
-    } //done
+    } //done //change $y=$request->header('full_points'); //and test it 
 
     //####################
     //**************************** */
@@ -1258,100 +1258,141 @@ class ManagerController extends Controller
         }
         //###### auth logout function end
 
-        $users = DB::select('select * from interview_requests');
-        $results = DB::select('select * from rank_interviews');//for showing accepted rank interviews
+        $interview_requests = DB::table('interview_requests')->where('status', 'requested')->get();
+        $accepted_interview_requests = DB::table('interview_requests')->where('status', 'accepted')->get();
         return response()->json([
-            $users,
-            $results,
+           'interview_requests'=> $interview_requests,
+           'accepted_interview_requests'=> $accepted_interview_requests ,
          ]); 
-        }
+    }//done
 
     //##################
 
     
     //ACCEPT INTERVIEW REQUESTS
 
-    public function accept_interview_request(Request $request,$id)
+    public function accept_interview_request(Request $request,)
     {
-        $result = DB::table('interview_requests')->where('id',$id)->first();
-        $data=new RankInterview;
-        //$data->id=$result->id;
-        $data->student_id=$result->student_id; 
-        $data->username=$result->username;
-        $data->current_rank=$result->current_rank;
-        $data->next_rank=$result->next_rank;
         
-        $data->save();
-        //$result_2 = DB::table('messages')->where('id',1)->get();
-        //$result_2 = DB::table('messages')->where('id',1)->first();
-        //sending messages to student_notifications table
-        $data_2=new StudentNotification;
-        $data_2->student_id=$result->id;
-        $data_2->message_id=9;
+        //###### auth user logout function start
+        $Authorization = $request->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+        if (!$manager) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        //###### auth logout function end
+
+        DB::table('interview_requests')->where('id',$request->id)->update([
+
+    		'status'=>'accepted',
+    	]);
+         //sending messages to student_notifications table
+         $data_2=new StudentNotification;
+         $data_2->student_id=$request->student_id;
+         $data_2->message_id=9;
+         $data_2->save(); 
         
-        DB::table('interview_requests')->where('id',$id)->delete();
-        $data_2->save();
-        
-        return back();
-    }
+        return response()->json([
+            'interview requests accepted',
+          ]); 
+    }//done
     //#########################
 
     //REJECT INTERVIEW REQUESTS
-    public function reject_interview_request(Request $request,$id){
+    public function reject_interview_request(Request $request){
+
+         //###### auth user logout function start
+        $Authorization = $request->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+        if (!$manager) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        //###### auth logout function end 
        
         //sending messages to student_notifications table
         $data_2=new StudentNotification;
-        $data_2->student_id=$id;
+        $data_2->student_id=$request->student_id;
         $data_2->message_id=10;
         
-        DB::table('interview_requests')->where('id',$id)->delete();
+        DB::table('interview_requests')->where('id',$request->id)->delete();
         $data_2->save();
         
-        return back();
+        return response()->json([
+            'interview requests rejected',
+          ]); 
 
-    }
+    }//done
     
     //###################
 
 
     //UPGRADE RANKE
-    public function upgrade_rank(Request $request,$id,$next_rank){
-        //$data=new Student;
-        //$data->id=$result->id; 
-        //$result = DB::table('rank_interviews')->get();
-        //$resultArray = $result->toArray();
-        DB::table('student_ranks')->where('student_id',$id)->update([
+    public function upgrade_rank(Request $request){
+       
+          //###### auth user logout function start
+        $Authorization = $request->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+        if (!$manager) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        //###### auth logout function end 
 
-    		'rank'=>$next_rank,
+        DB::table('student_ranks')->where('student_id',$request->student_id)->update([
+
+    		'rank'=>$request->next_rank,
     	]);
     	
         //sending messages to notifications table
         $data_2=new StudentNotification;
-        $data_2->student_id=$id;
-        $data_2->message_id=7;
+        $data_2->student_id=$request->student_id;
+        $data_2->message_id=8;
         
-        DB::table('rank_interviews')->where('id',$id)->delete();
+        DB::table('interview_requests')->where('id',$request->id)->delete();
         $data_2->save();
 
-        return back();
+        return response()->json([
+            'Rank has been upgrated successfuly',
+          ]); 
         //return redirect()->route('/Roadmaps');
-    }
+    }//done
 
     //##################
 
     //CANCEL RANK UPGRADING 
-    public function cancel_rank_upgrading(Request $request,$id){
+    public function cancel_rank_upgrading(Request $request){
+
+          //###### auth user logout function start
+        $Authorization = $request->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+        if (!$manager) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        //###### auth logout function end 
         
         //sending messages to student_notifications table
         $data_2=new StudentNotification;
-        $data_2->student_id=$id;
-        $data_2->message_id=8;
-        
-        DB::table('rank_interviews')->where('id',$id)->delete();
+        $data_2->student_id=$request->student_id;
+        $data_2->message_id=7;
         $data_2->save(); 
-        return back();
+        
+        DB::table('interview_requests')->where('id',$request->id)->delete();
+        return response()->json([
+            'Rank  upgrated has been canceld',
+          ]); 
 
-    }
+    }//done 
 
     //SHOW TEAMS-REQUESTS
 
@@ -1375,13 +1416,25 @@ class ManagerController extends Controller
         // ->with(compact('users'))
         // ->with(compact('teams'));
         
-        }
+    }//view
 
     
 //mahdi farfara
 public function add_student_to_project(Request $request)
 {
-    $manager_id = Auth::guard('manager')->user()->id;
+
+    //###### auth user logout function start
+    $Authorization = $request->header('Authorization');
+    if (!$Authorization) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+    if (!$manager) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
+    //###### auth logout function end
+
+    $manager_id = $manager->id;
 
     $validatedData = $request->validate([
         'project_id' => 'required|integer',
@@ -1395,7 +1448,7 @@ public function add_student_to_project(Request $request)
     $isMember = $teamMembers->contains('student_id', $validatedData['student_id']);
     if ($isMember) {
         return response()->json([
-            'message' => 'The student is already a member of the team'
+            'message' => 'The student is already a member of this team'
         ], 400);
     }
 
@@ -1428,7 +1481,7 @@ public function add_student_to_project(Request $request)
         'message' => 'Student added to the project team successfully',
         'team_member_id' => $teamMember->id
     ], 201);
-}
+}//done
 
 ///end of add single student to projetc with create team 
 
@@ -1445,17 +1498,29 @@ public function team_join_projects(){
     ->get();
 //return $teamRequests;
     return view('manager.accept_team', compact('studentRequests'));    
-    }
+}//view
 
 
 public function add_team_to_project(Request $request)
 {
+
+    //###### auth user logout function start
+    $Authorization = $request->header('Authorization');
+    if (!$Authorization) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+    if (!$manager) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
+    //###### auth logout function end
+
     $validatedData = $request->validate([
         'team_id' => 'required|integer',
         'project_id' => 'required|integer',
     ]);
 
-    $manager_id = Auth::guard('manager')->user()->id;
+    $manager_id = $manager->id;
 
     // Check if the project already has a team
     $project = Client_projects::findOrFail($validatedData['project_id']);

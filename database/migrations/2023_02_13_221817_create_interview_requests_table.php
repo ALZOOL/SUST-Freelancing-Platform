@@ -17,9 +17,13 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('student_id')->nullable();
             $table->foreign('student_id')->references('student_id')->on('students');
+            $table->string('first_name');
+            $table->string('last_name');
             $table->string('username');
+            $table->string('role');
             $table->char('current_rank',3);
             $table->char('next_rank',3)->nullable();
+            $table->string('status');
             $table->timestamps();
         });
     }
