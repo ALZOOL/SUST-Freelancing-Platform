@@ -174,7 +174,7 @@ Route::controller(ManagerController::class)->group(function(){
 //38 routes until here
     //TEAM REQUESTS AND TEAMS JOINING
     // Route::get('manager/Team_requests/accepted',"accepted_team_requests")->name('/team_requests');
-    
+    ///ddd
     //Route::get('manager/team_join_projects',"team_join_projects")->name('team_join_projects');
     
     Route::get('manager/join_project_requests',"join_project_requests")->name('/team_requests');
