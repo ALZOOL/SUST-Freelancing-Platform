@@ -45,15 +45,15 @@ return [
             'provider' => 'manager',
             'role' => 'manager',
         ],
-        'teacher' => [
-            'driver' => 'session',
-            'provider' => 'manager',
-            'role' => 'teacher',
-        ],
         'admin' => [
             'driver' => 'session',
             'provider' => 'manager',
             'role' => 'admin',
+        ],
+        'teacher' => [
+            'driver' => 'session',
+            'provider' => 'manager',
+            'role' => 'teacher',
         ],
         'client' => [
             'driver' => 'session',
@@ -86,18 +86,24 @@ return [
         'manager' => [
             'driver' => 'eloquent',
             'model' => App\Models\Manager::class,
-            'table' => 'managers',
-            'role_column' => 'role'
+        ],
+        'teacher' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Manager::class,
+        ],
+        'admin' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Manager::class,
         ],
         'client' => [
             'driver' => 'eloquent',
             'model' => App\Models\Client::class,
         ],
 
-        // 'users' => [
+        /// 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
-        // ],
+        // ],rrrr
     ],
 
     /*

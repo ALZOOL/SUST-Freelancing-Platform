@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tasks_solutions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('task_id');
+            $table->unsignedBigInteger('task_id')->nullable();
             $table->foreign('task_id')->references('id')->on('tasks');
             $table->string('solution');
             $table->timestamps();

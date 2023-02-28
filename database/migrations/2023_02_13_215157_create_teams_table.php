@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id('team_id');
             $table->string('team_name');
             $table->string('invitation_link')->unique();
-            $table->unsignedBigInteger('team_leader');
+            $table->unsignedBigInteger('team_leader')->nullable();
             $table->foreign('team_leader')->references('student_id')->on('students');
             $table->timestamps();
         });

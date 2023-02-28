@@ -22,6 +22,7 @@ return new class extends Migration
     $table->string('password');
     $table->string('Authorization')->Unique()->nullable();
     $table->timestamps();
+    $table->timestamp('last_login_at');
     });
     }
 

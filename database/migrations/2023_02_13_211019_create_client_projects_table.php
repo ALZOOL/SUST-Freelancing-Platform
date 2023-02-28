@@ -30,6 +30,7 @@ return new class extends Migration
             $table->integer('ui_ux')->nullable();
             $table->integer('web_security')->nullable();
             $table->integer('team_count');
+            $table->timestamp('start_date')->nullable();
             $table->timestamps();
             
         });

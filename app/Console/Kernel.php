@@ -5,6 +5,10 @@ namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Models\Student;
+use App\Models\Manager;
+use App\Models\Client;
+
+
 
 class Kernel extends ConsoleKernel
 {
@@ -29,11 +33,17 @@ class Kernel extends ConsoleKernel
     // protected function schedule(Schedule $schedule)
     // {
     //     $schedule->call(function () {
-    //         $threshold = now()->subHours(12);
-    //         $users = Student::where('last_login_at', '<=', $threshold)
+    //         $threshold = now()->subHours(8);
+    //         $student = Student::where('last_login_at', '<=', $threshold)
     //                      ->whereNotNull('Authorization')
     //                      ->update(['Authorization' => null]);
-    //     })->twiceDaily();
+    //         $manager = Manager::where('last_login_at', '<=', $threshold)
+    //                      ->whereNotNull('Authorization')
+    //                      ->update(['Authorization' => null]);
+    //         $client = Client::where('last_login_at', '<=', $threshold)
+    //                      ->whereNotNull('Authorization')
+    //                      ->update(['Authorization' => null]);
+    //     })->everyEightHours();
     // }
 
 

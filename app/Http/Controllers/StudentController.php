@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client_projects;
-use App\Models\project;
 use App\Models\Student;
 use App\Models\InterviewRequest;
 use App\Models\Team;
@@ -21,6 +20,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 class StudentController extends Controller
 {
@@ -100,25 +103,6 @@ class StudentController extends Controller
 
 //end login finction 
 
-
-    // public function password()
-    // {
-    //     $data['title'] = 'Change Password';
-    //     return view('student.password', $data);
-    // }
-
-    // public function password_action(Request $request)
-    // {
-    //     $request->validate([
-    //         'old_password' => 'required|current_password',
-    //         'new_password' => 'required|confirmed',
-    //     ]);
-    //     $Student = Student::find(Auth::id());
-    //     $Student->password = Hash::make($request->new_password);
-    //     $Student->save();
-    //     $request->session()->regenerate();
-    //     return back()->with('success', 'Password changed!');
-    // }
 
     public function logout(Request $request){
 
@@ -723,7 +707,8 @@ class StudentController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         // Validate authorization token with client guard
-        $student = Student::where('Authorization', $Authorization)->first();
+        $students = Student::where('Authorization', $Authorization)->first();
+        $student = Student::find($students->student_id);
         if (!$student) {
             return response()->json(['error' => 'Invalid token'], 401);
         }
@@ -743,8 +728,14 @@ class StudentController extends Controller
             'invitation_link' => $invitation_link,
             'team_leader'=>$student_id
         ]);
-        $users = Auth()->id();
-        $team->users()->attach($users);
+        //$users = $student_id;
+        $team->users()->attach($student->student_id);
+        $student->team_id= $team->team_id;;
+        $student->save();
+
+        return response()->json(['error' => "Team create successfully "], 422);
+
+
     }//done
 
     
@@ -759,7 +750,9 @@ class StudentController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         // Validate authorization token with client guard
-        $student = Student::where('Authorization', $Authorization)->first();
+        $students = Student::where('Authorization', $Authorization)->first();
+
+        $student = Student::find($students->student_id);
         if (!$student) {
             return response()->json(['error' => 'Invalid token'], 401);
         }
@@ -768,14 +761,201 @@ class StudentController extends Controller
         
         if ($teams->count() > 0) {
             return response()->json(['error' => "you are already a team member."], 422);
-        }
-        
+        }  
         $invitation_link = $request->invitation_link;
         $team = Team::where('invitation_link', $invitation_link)->first();
         
-        $team->users()->attach($student_id,['team_id'=>$team->team_id],['team_leader' => 0 ]);
-    }//done
+        $team->users()->attach($student_id,['team_id'=>$team->team_id]);
+        $student->team_id= $team->team_id;;
+        $student->save();
+
+    }//done //add vervication for checking if not valid return respone 
     
+
+    public function edit_team_name(Request $request){
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with student guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $team_leader = DB::table('teams')->where('team_leader', $student_id)->exists();
+        $teams = DB::table('teams')->where('team_leader', $student_id)->first();
+        if(!$teams && !$team_leader){
+            return response()->json(['error' => "You are not the team leader. Only the team leader can edit team."], 403);
+        }
+        $team = Team::find($teams->team_id);
+
+        try{
+        $request->validate([
+            'team_name' => [
+                'nullable',
+                'string',
+                Rule::unique('teams','team_name')->ignore($team->team_id,'team_id'),
+            ],
+        ]);
+        }catch (ValidationException $e) {
+            $errors = $e->validator->errors();
+            if ($errors->has('team_name')) {
+                return response()->json(['error' => 'Team name is already used'], 422);
+            }
+            throw $e;
+        }
+
+
+        if ($request->filled('team_name')) {
+            $team->team_name = $request->input('team_name');
+        }
+        $team->save();
+        // Return a success response
+        return response()->json(['message' => 'Team name update successfully.']);
+
+    }//done
+
+
+    public function delete_team(Request $request){
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with student guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $team_leader = DB::table('teams')->where('team_leader', $student_id)->exists();
+        $team = DB::table('teams')->where('team_leader', $student_id)->first();
+        if (!$team_leader) {
+            return response()->json(['error' => "You are not the team leader. Only the team leader can delete the team."], 403);
+        }
+
+        $team_members = DB::table('student_teams')
+        ->where('student_teams.team_id', $team->team_id)
+        ->join('students', 'student_teams.student_id', '=', 'students.student_id')
+        ->get();
+        foreach ($team_members as $team_member) {
+            Student::where('students.team_id', $team->team_id)
+                ->where('students.student_id', $team_member->student_id)
+                ->update(['students.team_id' => null]);
+        }
+    
+
+        DB::table('student_teams')->where('team_id',$team->team_id)->delete();
+
+        // Delete team record
+        Student::where('team_id', $team->team_id)->update(['team_id' => null]);
+        
+        Team::where('team_id', $team->team_id)->update(['team_leader' => null]);
+
+        DB::table('teams')->where('team_id',$team->team_id)->delete();
+    
+    
+        return response()->json(['message' => 'Team delete successfully.']);
+
+    }//done with test also
+
+
+
+    public function delete_team_member(Request $request){
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with student guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+        $deleted_student= $request->student_id;
+        $team_leader = DB::table('teams')->where('team_leader', $student_id)->exists();
+        $team = DB::table('teams')->where('team_leader', $student_id)->first();
+        if (!$team_leader) {
+            return response()->json(['error' => "You are not the team leader. Only the team leader can delete the team members."], 403);
+        }
+        DB::table('student_teams')->where('team_id',$team->team_id)
+        ->where('student_id',$deleted_student)->delete();
+        
+        Student::where('team_id', $team->team_id)
+        ->where('student_id', $deleted_student)->update(['team_id' => null]);
+    
+        return response()->json(['message' => 'Student remove from team successfully.']);
+
+    }//done 
+
+
+
+    public function changeinfo(Request $request) {
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with student guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+
+
+        try{
+            $request->validate([
+                'email' => [
+                    'nullable',
+                    'email',
+                    Rule::unique('students', 'email')->ignore($student_id, 'student_id'),
+                ],
+                'username' => [
+                    'nullable',
+                    'string',
+                    Rule::unique('students', 'username')->ignore($student_id, 'student_id'),
+                ],
+            ]);
+        }catch (ValidationException $e) {
+            $errors = $e->validator->errors();
+            if ($errors->has('email')) {
+                return response()->json(['error' => 'Email address is already used'], 422);
+            }
+            elseif($errors->has('username')){
+                return response()->json(['error' => 'username is already used'], 422);
+            }
+            throw $e;
+        }
+        if ($request->filled('first_name')) {
+            $student->first_name = $request->input('first_name');
+        }
+        if ($request->filled('last_name')) {
+            $student->last_name = $request->input('last_name');
+        }
+        if ($request->filled('username')) {
+            $student->username = $request->input('username');
+        }
+        if ($request->filled('email')) {
+            $student->email = $request->input('email');
+        }
+        if ($request->filled('avatar')) {
+            $student->avatar = $request->input('avatar');
+        }
+        if ($request->filled('role')) {
+            $student->role = $request->input('role');
+        }
+        if ($request->filled('password')) {
+            $student->password = Hash::make($request->input('password'));
+        }
+        // Save the updated student information
+        $student->save();
+        // Return a success response
+        return response()->json(['message' => 'User information updated successfully.']);
+    }//done 
+
+
+
+
     //midle ware
 // public function __construct()
 // {

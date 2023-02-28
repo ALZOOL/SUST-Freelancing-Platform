@@ -14,6 +14,8 @@ use App\Models\Star;
 use App\Models\ProjectsTeamMember;
 use App\Models\Student;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 
 
@@ -59,28 +61,28 @@ class ClientController extends Controller
     }
 
     public function login_action(Request $request)
-{
-    $request->validate([
-        'email' => 'required',
-        'password' => 'required',
-    ]);
-    if (Auth::guard('client')->attempt(['email' => $request->email, 'password' => $request->password])) {
-        $client = Client::where('email', $request->email)->first();
-        $clientinfo=Client::where('email', $request->email)->select('first_name', 'last_name', 'company_name', 'email', 'company_email')->first();
-        // Generate a unique cookie value for the client
-        $Authorization = Str::random(40);
-        // Update the client's cookie_value field with the generated value
-        $client->Authorization = $Authorization;
-        $client->save();
-        
-        return response()->json([
-            "client" => $clientinfo,
-            "Authorization" => $Authorization
+    {
+        $request->validate([
+            'email' => 'required',
+            'password' => 'required',
         ]);
-    } else {
-        return response()->json(['ok' => "wrong username or password"], 200);
+        if (Auth::guard('client')->attempt(['email' => $request->email, 'password' => $request->password])) {
+            $client = Client::where('email', $request->email)->first();
+            $clientinfo=Client::where('email', $request->email)->select('first_name', 'last_name', 'company_name', 'email', 'company_email')->first();
+            // Generate a unique cookie value for the client
+            $Authorization = Str::random(40);
+            // Update the client's cookie_value field with the generated value
+            $client->Authorization = $Authorization;
+            $client->save();
+
+            return response()->json([
+                "client" => $clientinfo,
+                "Authorization" => $Authorization
+             ]);
+        } else {
+             return response()->json(['ok' => "wrong username or password"], 200);
+        }
     }
-}
 
 
 
@@ -294,5 +296,76 @@ public function stars(Request $request){
     }
     return response()->json(['ok' => "Stars added successfully!"], 200);
 }
+
+
+public function notifications(){
+    $Authorization = request()->header('Authorization');
+    if (!$Authorization) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    // Validate authorization token with client guard
+    $client = Client::where('Authorization', $Authorization)->first();
+    if (!$client) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
+    $client_id = $client->client_id;
+    $notification = DB::table('client_notifications')->where('client_id', $client_id)
+    ->join('messages','client_notifications.message_id','=','messages.id')->orderBy("id", "desc")
+    ->get(['client_notifications.id', 'client_notifications.message_id', 'messages.message']);
+    return response()->json([
+        'notifications' => $notification
+    ]);
+}
+
+
+public function changeinfo(Request $request) {
+    $Authorization = request()->header('Authorization');
+    if (!$Authorization) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    // Validate authorization token with client guard
+    $client = Client::where('Authorization', $Authorization)->first();
+    if (!$client) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
+    $client_id = $client->client_id;
+    try{
+        $request->validate([
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('clients', 'email')->ignore($client_id, 'client_id'),
+            ],
+        ]);
+    }catch (ValidationException $e) {
+        $errors = $e->validator->errors();
+        if ($errors->has('email')) {
+            return response()->json(['error' => 'Email address is already in use'], 422);
+        }
+        throw $e;
+    }
+    if ($request->filled('first_name')) {
+        $client->first_name = $request->input('first_name');
+    }
+    if ($request->filled('last_name')) {
+        $client->last_name = $request->input('last_name');
+    }
+    if ($request->filled('company_name')) {
+        $client->company_name = $request->input('company_name');
+    }
+    if ($request->filled('email')) {
+        $client->email = $request->input('email');
+    }
+    if ($request->filled('company_email')) {
+        $client->company_email = $request->input('company_email');
+    }
+    if ($request->filled('password')) {
+        $client->password = bcrypt($request->input('password'));
+    }
+    // Save the updated client information
+    $client->save();
+    // Return a success response
+    return response()->json(['message' => 'User information updated successfully.']);
+}//done 
 
 }

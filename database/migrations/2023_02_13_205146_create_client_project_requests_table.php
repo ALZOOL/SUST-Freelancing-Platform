@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('project_title');
             $table->string('project_description');
             $table->string('project_file_path')->nullable();
+            $table->string('status');
             $table->timestamps();
         });
     }
