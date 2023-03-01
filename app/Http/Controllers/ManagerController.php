@@ -781,7 +781,9 @@ class ManagerController extends Controller
         
         //$users = DB::select('select * from roadmaps');
         $users = DB::table('roadmaps')
-        ->join('managers', 'roadmaps.manager_id', '=', 'managers.id')->get();
+        ->join('managers', 'roadmaps.manager_id', '=', 'managers.id')
+        ->select('roadmaps.id','managers.first_name','managers.last_name','roadmaps.title','roadmaps.category','roadmaps.description')
+        ->get();
         $roadmaps= [];
         foreach ($users as $user) {
             $roadmaps[] = [
@@ -1193,8 +1195,8 @@ class ManagerController extends Controller
          if (!$manager) {
              return response()->json(['error' => 'Invalid token'], 401);
          }
+         
          //###### auth logout function end
-
         $users = DB::table('student_ranks')->where('student_id', '=', $request->student_id)->value('points');
         $x = $users;
         $y=$request->custom_points;
