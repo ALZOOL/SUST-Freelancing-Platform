@@ -1430,7 +1430,7 @@ class ManagerController extends Controller
         $studentRequests = DB::table('student_join_projects')
             ->join('students', 'student_join_projects.student_id', '=', 'students.student_id')
             ->join('student_ranks', 'students.student_id', '=', 'student_ranks.student_id')
-            ->select('student_join_projects.project_id', 'student_join_projects.project_title', 'students.*', 'student_ranks.rank')
+            ->join('clients', 'student_join_projects.client_id', '=', 'clients.client_id')
             ->orderBy('student_join_projects.id')
             ->get()
             ->groupBy('project_id');
@@ -1440,6 +1440,8 @@ class ManagerController extends Controller
             $project = [
                 'project_id' => $projectId,
                 'title' => $requests->first()->project_title,
+                'client_email' => $requests->first()->email,
+
                 'student_requests' => [],
                 'team_requests' => []
             ];
@@ -1630,6 +1632,32 @@ public function add_team_to_project(Request $request)
     ], 201);
 }//done with test ddd 
 
+public function show_contact_us(Request $request){
+
+    //###### auth user logout function start
+    $Authorization = $request->header('Authorization');
+    if (!$Authorization) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager',)->first();
+    $teacher = Manager::where('Authorization', $Authorization)->where('role', 'teacher',)->first();
+    if (!$manager and !$teacher) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }
+    //###### auth logout function end 
+   
+   //$users = DB::select('select * from roadmaps');
+   $users = DB::table('contact_us')
+   ->join('clients', 'clients.client_id', '=', 'contact_us.client_id')
+   ->select('contact_us.id','clients.first_name','clients.last_name','contact_us.client_email','contact_us.description')
+   ->orderBy("contact_us.id", "desc")->get();
+
+   return response()->json([
+    'conutact_us' => $users,
+]);
+
+
+}
 
 //############################## AAAAAAAAAALLLL DDDDDOOONNNEEEEE ##############################
 

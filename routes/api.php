@@ -57,8 +57,8 @@ Route::controller(StudentController::class)->group(function(){
     Route::post('student/create_team','create_team_action')->name('teams.create');
     Route::post('student/join_team',  'join_team_action')->name('teams.join');
     Route::put('student/edit_team_name',  'edit_team_name')->name('edit_team_name');
-    Route::delete('student/delete_team',  'delete_team')->name('delete_team');
-    Route::delete('student/delete_team_member',  'delete_team_member')->name('delete_team_member');
+    Route::put('student/delete_team',  'delete_team')->name('delete_team');
+    Route::put('student/delete_team_member',  'delete_team_member')->name('delete_team_member');
     
     
     
@@ -181,6 +181,7 @@ Route::controller(ManagerController::class)->group(function(){
    
     Route::post('manager/add_student_to_project',"add_student_to_project")->name('add_student_to_project');
     Route::post('manager/add_team_to_project',"add_team_to_project")->name('add_team_to_project');
+    Route::get('manager/show_contact_us',"show_contact_us")->name('/show_contact_us');
     
     
    //tst
