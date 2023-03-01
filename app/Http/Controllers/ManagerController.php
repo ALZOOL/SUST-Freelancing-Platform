@@ -20,7 +20,11 @@ use App\Models\ClientNotification;
 use App\Models\StudentTeam;
 use App\Models\Student;
 use App\Models\StudentSolvedTask;
+use App\Models\TaskSolution;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use SebastianBergmann\CodeCoverage\Report\Xml\Project;
 
 class ManagerController extends Controller
 {
@@ -47,6 +51,8 @@ class ManagerController extends Controller
                 $authorizationExists = DB::table('managers')->where('Authorization', $Authorization)->exists();
             }
             $manager->Authorization = $Authorization;
+            $manager->last_login_at = now();
+            $manager->save(); 
             $manager->save(); 
             //return data to front
               return response()->json([
@@ -111,6 +117,7 @@ class ManagerController extends Controller
                 $authorizationExists = DB::table('managers')->where('Authorization', $Authorization)->exists();
             }
             $admin->Authorization = $Authorization;
+            $admin->last_login_at = now();
             $admin->save(); 
             //return data to front
               return response()->json([
@@ -198,6 +205,7 @@ class ManagerController extends Controller
                  $authorizationExists = DB::table('managers')->where('Authorization', $Authorization)->exists();
              }
              $teacher->Authorization = $Authorization;
+             $teacher->last_login_at = now(); 
              $teacher->save(); 
              //return data to front
                return response()->json([
@@ -250,7 +258,7 @@ class ManagerController extends Controller
        }
        //###### auth logout function end
 
-       $users = DB::table('managers')->where('role', 'manager')->orwhere('role', 'teacher')->select('first_name', 'last_name', 'role', 'email')->first();
+       $users = DB::table('managers')->where('role', 'manager')->orwhere('role', 'teacher')->select('id','first_name', 'last_name', 'role', 'email')->get();
 
        return response()->json([
         'managers' => $users
@@ -361,30 +369,54 @@ class ManagerController extends Controller
     } //just view ddd
 
     public function update_system_managers(Request $request){
-
-    	 //###### auth user logout function start
-         $Authorization = $request->header('Authorization');
-         if (!$Authorization) {
-             return response()->json(['error' => 'Unauthorized'], 401);
-         }
-         $admin = Manager::where('Authorization', $Authorization)->where('role', 'admin')->first();
-         if (!$admin) {
-             return response()->json(['error' => 'Invalid token'], 401);
-         }
-         //###### auth logout function end
-        DB::table('managers')->where('id',$request->id)->update([
-
-    		'first_name'=>$request->first_name,
-            'last_name'=>$request->last_name,
-    		'email'=>$request->email,
-            'role'=>$request->role,
-            'password'=>bcrypt($request->password),
-            //$data->password=bcrypt($request->password);
-    	]);
+        //###### auth user logout function start
+        $Authorization = $request->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $admin = Manager::where('Authorization', $Authorization)->where('role', 'admin')->first();
+        if (!$admin) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        //###### auth logout function end
+        try{
+            $request->validate([
+                'email' => [
+                    'nullable',
+                    'email',
+                    Rule::unique('managers', 'email')->ignore($request->id, 'id'),
+                ],
+            ]);
+        }catch (ValidationException $e) {
+            $errors = $e->validator->errors();
+            if ($errors->has('email')) {
+                return response()->json(['error' => 'Email address is already in use'], 422);
+            }
+            throw $e;
+        }
+        $update_data = array();
+        if ($request->filled('first_name')) {
+            $update_data['first_name'] = $request->first_name;
+        }
+        if ($request->filled('last_name')) {
+            $update_data['last_name'] = $request->last_name;
+        }
+        if ($request->filled('email')) {
+            $update_data['email'] = $request->email;
+        }
+        if ($request->filled('role')) {
+            $update_data['role'] = $request->role;
+        }
+        if ($request->filled('password')) {
+            $update_data['password'] = bcrypt($request->password);
+        }
+   
+        DB::table('managers')->where('id', $request->id)->update($update_data);
+   
         return response()->json([
-            'manager edited successfully'
-             ]);
-    } //done test it and try to edit one by one 
+            'message' => 'Manager edited successfully'
+        ]);
+   }//done test add to aymen 
 
     public function delete_system_managers(Request $request){
 
@@ -527,6 +559,45 @@ class ManagerController extends Controller
         ->select('client_project_requests.id','client_project_requests.client_id', 'clients.email','client_project_requests.project_title','client_project_requests.project_description','client_project_requests.project_file_path','client_project_requests.status')
         ->where('client_project_requests.status','accepted')
         ->get();
+
+        //$clientss_projects = DB::table('client_projects')->get();
+        $clients_projects = DB::table('client_projects')->join('clients', 'client_projects.client_id', '=', 'clients.client_id')
+        ->get();
+
+        $data = [];
+        foreach ($clients_projects as $project) {
+            $team_members = ProjectsTeamMember::where('team_id', $project->team_id)->get();
+            $team_members_data = [];
+            foreach ($team_members as $team_member) {
+                $student = Student::find($team_member->student_id);
+                $team_members_data[] = [
+                    'id' => $student->student_id,
+                    'first_name' => $student->first_name,
+                    'last_name' => $student->last_name,
+                    'rank' => $student->rank,
+                    'role' => $student->role,
+                    // add more fields as needed
+                ];
+            }
+            $data[] = [
+                
+                'id' => $project->id,
+                'project_title' => $project->title,
+                'project_category' => $project->category,
+                'email' => $project->email,
+                'project_description' => $project->description,
+                'project_deadline' => $project->deadline,
+                'project_status' => $project->status,
+                'project_rank' => $project->rank,
+                'project_frontend' => $project->frontend,
+                'project_backend' => $project->backend,
+                'project_ui_ux' => $project->ui_ux,
+                'project_web_security' => $project->web_security,
+                'project_team_count' => $project->team_count,
+                'team_id' => $project->team_id,
+                'team_members' => $team_members_data
+            ];
+        }
         //for showing accepted clients projects
        // $teams = DB::select('select * from projects_teams');
 
@@ -548,6 +619,7 @@ class ManagerController extends Controller
 
         return response()->json([
             'approved projects' => $users,
+            'Ready clients projects' => $data,
         ]);    
         
     }//done  with test ddd
@@ -592,14 +664,14 @@ class ManagerController extends Controller
         ]);
         //echo $data;
         $data->save();
-
+        
         //sending messages to client_notifications table
         $result_2 = DB::table('clients')->where('email',$request->client_email)->first();
         $data_2=new ClientNotification;
         $data_2->client_id=$request->client_id;
         $data_2->message_id=5;
         $data_2->save();
-        //this is not working until i download the new commet of  mixing the tables//sweet 
+        ////this is not working until i download the new commet of  mixing the tables//sweet 
         DB::table('client_project_requests')
         ->where('id',$request->id)
         ->where('status','accepted')->delete();
@@ -803,17 +875,24 @@ class ManagerController extends Controller
             return response()->json(['error' => 'Invalid token'], 401);
         }
         //###### auth logout function end
-
-    	DB::table('roadmaps')->where('id',$request->id)->update([
-
-    		'title'=>$request->title,
-            'category'=>$request->category,
-    		'description'=>$request->description
-    	]);
-    	return response()->json([
+        $update_data = array();
+        
+        if ($request->filled('title')) {
+            $update_data['title'] = $request->title;
+        }
+        if ($request->filled('category')) {
+            $update_data['category'] = $request->category;
+        }
+        if ($request->filled('description')) {
+            $update_data['description'] = $request->description;
+        }
+   
+        DB::table('roadmaps')->where('id', $request->id)->update($update_data);
+        return response()->json([
             'Roadmap edited successfuly'
         ]);
-    } //done with test ddd 
+   
+    }
 
     public function delete_roadmap(Request $request){
 
@@ -866,7 +945,6 @@ class ManagerController extends Controller
     //ADD NEW TASK 
     public function add_task(Request $request)
     {
-
         //###### auth user logout function start
         $Authorization = $request->header('Authorization');
         if (!$Authorization) {
@@ -877,6 +955,10 @@ class ManagerController extends Controller
             return response()->json(['error' => 'Invalid token'], 401);
         }
         //###### auth logout function end
+        $path = null;
+        if ($request->hasFile('project_file')) {
+            $path = $request->file('project_file')->store('tasks/uploads');
+        }
 
         $request->validate([
             'title' => 'required',
@@ -891,20 +973,21 @@ class ManagerController extends Controller
             'level'=>$request->level,
             'category'=>$request->category,
             'description'=> $request->description,
-            'file_path'=> $request->file_path,
-            'solution'=> $request->solution,
+            'file_path'=> $path,
             'rank'=> $request->rank,
-            'points'=> $request->points,
-
-                        
+            'points'=> $request->points,             
         ]);
-
         $data->save();
-
+        if ($request->filled('solution')) {
+            $solution = TaskSolution::firstOrCreate(
+                ['task_id' => $data->id],
+                ['solution' => $request->solution]
+            );
+        }
         return response()->json([
            "Task added successfuly"
         ]); 
-    }//done with test ddd  
+    }
     
 
     //###################### 
@@ -917,32 +1000,47 @@ class ManagerController extends Controller
 
     public function update_task(Request $request){
 
-         //###### auth user logout function start
-         $Authorization = $request->header('Authorization');
-         if (!$Authorization) {
-             return response()->json(['error' => 'Unauthorized'], 401);
-         }
-         $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
-         if (!$manager) {
-             return response()->json(['error' => 'Invalid token'], 401);
-         }
-         //###### auth logout function end
+        //###### auth user logout function start
+        $Authorization = $request->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+        if (!$manager) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        //###### auth logout function end
+        $update_data = array();
+        
+        if ($request->filled('title')) {
+            $update_data['title'] = $request->title;
+        }
+        if ($request->filled('level')) {
+            $update_data['level'] = $request->level;
+        }
+        if ($request->filled('category')) {
+            $update_data['category'] = $request->category;
+        }
+        if ($request->filled('description')) {
+            $update_data['description'] = $request->description;
+        }
+        if ($request->filled('file_path')) {
+            $update_data['file_path'] = $request->file_path;
+        }
+        if ($request->filled('rank')) {
+            $update_data['rank'] = $request->rank;
+        }
+        if ($request->filled('points')) {
+            $update_data['points'] = $request->points;
+        }
+        
+        DB::table('tasks')->where('id', $request->id)->update($update_data);
 
-    	DB::table('tasks')->where('id',$request->id)->update([
-
-    		'title'=>$request->title,
-            'level'=>$request->level,
-            'category'=>$request->category,
-    		'description'=>$request->description,
-            'file_path'=>$request->file_path,
-            'solution'=>$request->solution,
-            'rank'=>$request->rank,
-            'points'=>$request->points,
-    	]);
         return response()->json([
             "Task edited successfuly"
          ]); 
-    } //done test it Mahdi should edit this 
+
+    } ///done test add to aymen //done test it Mahdi should edit this 
 
     public function delete_task(Request $request){
 
@@ -1323,7 +1421,8 @@ class ManagerController extends Controller
         $studentRequests = DB::table('student_join_projects')
         ->join('students', 'student_join_projects.student_id', '=', 'students.student_id')
         ->join('student_ranks', 'students.student_id', '=', 'student_ranks.student_id')
-        ->select('student_join_projects.id','student_join_projects.project_id','student_join_projects.project_title','student_join_projects.client_id','students.student_id','students.first_name', 'students.last_name', 'students.email', 'students.role','student_ranks.rank')->first();
+        ->select('student_join_projects.id','student_join_projects.project_id','student_join_projects.project_title','student_join_projects.client_id','students.student_id','students.first_name', 'students.last_name', 'students.email', 'students.role','student_ranks.rank')->
+        get();
         //echo $studentRequests;
 
         $teamRequests = DB::table('team_join_projects')
@@ -1332,6 +1431,9 @@ class ManagerController extends Controller
         ->join('clients' , 'client_projects.client_id','=','clients.client_id')
         ->select('team_join_projects.id', 'team_join_projects.project_id','clients.email','team_join_projects.project_title','team_join_projects.team_id','teams.team_name')
         ->get();
+
+        
+
         return response()->json([
             'team_requests'=>$teamRequests,
             'student_requests'=>$studentRequests,
@@ -1377,6 +1479,10 @@ public function add_student_to_project(Request $request)
     $teamCount = $project->team_count;
     $currentTeamCount = $teamMembers->count();
     if ($currentTeamCount >= $teamCount) {
+        // if($currentTeamCount== $teamCount && $project->start_dat==null){
+        //     $project->start_date = now();
+        //     $project->save();
+        // }
         return response()->json([
             'message' => 'The team is already full'
         ], 400);
@@ -1397,6 +1503,12 @@ public function add_student_to_project(Request $request)
     $teamMember->team_id = $team->id;
     $teamMember->student_id = $student->student_id;
     $teamMember->save();
+    $newteamMembers = ProjectsTeamMember::where('team_id', $project->team_id)->get();
+    $newcurrentTeamCount = $newteamMembers->count();
+    if($newcurrentTeamCount== $teamCount){
+        $project->start_date = now();
+        $project->save();
+    }
 
     return response()->json([
         'message' => 'Student added to the project team successfully',
