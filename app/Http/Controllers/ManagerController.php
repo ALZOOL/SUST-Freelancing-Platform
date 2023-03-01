@@ -1406,39 +1406,83 @@ class ManagerController extends Controller
     //SHOW TEAMS-REQUESTS
 
     public function join_project_requests(Request $request){
-        
-         //###### auth user logout function start
-         $Authorization = $request->header('Authorization');
-         if (!$Authorization) {
-             return response()->json(['error' => 'Unauthorized'], 401);
-         }
-         $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
-         if (!$manager) {
-             return response()->json(['error' => 'Invalid token'], 401);
-         }
-         //###### auth logout function end
-
-        $studentRequests = DB::table('student_join_projects')
-        ->join('students', 'student_join_projects.student_id', '=', 'students.student_id')
-        ->join('student_ranks', 'students.student_id', '=', 'student_ranks.student_id')
-        ->select('student_join_projects.id','student_join_projects.project_id','student_join_projects.project_title','student_join_projects.client_id','students.student_id','students.first_name', 'students.last_name', 'students.email', 'students.role','student_ranks.rank')->
-        get();
-        //echo $studentRequests;
+            
+            //###### auth user logout function start
+            $Authorization = $request->header('Authorization');
+            if (!$Authorization) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+            $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+            if (!$manager) {
+                return response()->json(['error' => 'Invalid token'], 401);
+            }
+            //###### auth logout function end
 
         $teamRequests = DB::table('team_join_projects')
-        ->join('teams', 'team_join_projects.team_id', '=', 'teams.team_id')
-        ->join('client_projects' , 'team_join_projects.project_id','=','client_projects.id')
-        ->join('clients' , 'client_projects.client_id','=','clients.client_id')
-        ->select('team_join_projects.id', 'team_join_projects.project_id','clients.email','team_join_projects.project_title','team_join_projects.team_id','teams.team_name')
-        ->get();
+            ->join('teams', 'team_join_projects.team_id', '=', 'teams.team_id')
+            ->join('client_projects', 'team_join_projects.project_id', '=', 'client_projects.id')
+            ->join('clients', 'client_projects.client_id', '=', 'clients.client_id')
+            ->select('team_join_projects.id', 'team_join_projects.project_id', 'clients.email', 'team_join_projects.project_title', 'team_join_projects.team_id', 'teams.team_name')
+            ->get();
 
-        
+        $studentRequests = DB::table('student_join_projects')
+            ->join('students', 'student_join_projects.student_id', '=', 'students.student_id')
+            ->join('student_ranks', 'students.student_id', '=', 'student_ranks.student_id')
+            ->select('student_join_projects.project_id', 'student_join_projects.project_title', 'students.*', 'student_ranks.rank')
+            ->orderBy('student_join_projects.id')
+            ->get()
+            ->groupBy('project_id');
+
+        $results = [];
+        foreach ($studentRequests as $projectId => $requests) {
+            $project = [
+                'project_id' => $projectId,
+                'title' => $requests->first()->project_title,
+                'student_requests' => [],
+                'team_requests' => []
+            ];
+
+            foreach ($requests as $request) {
+                $student = [
+                    'project_id' => $request->project_id,
+                    'student_id' => $request->student_id,
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'rank' => $request->rank,
+                    // add more fields as needed
+                ];
+
+                $project['student_requests'][] = $student;
+            }
+
+            // Add team requests to the project array
+            $teamRequestsForProject = $teamRequests->where('project_id', $projectId);
+            foreach ($teamRequestsForProject as $teamRequest) {
+                $team = [
+                    'id' => $teamRequest->id,
+                    'project_id' => $request->project_id,
+                    'team_id' => $teamRequest->team_id,
+                    'team_name' => $teamRequest->team_name
+                ];
+
+                $project['team_requests'][] = $team;
+            }
+
+            $results[] = $project;
+        }
 
         return response()->json([
-            'team_requests'=>$teamRequests,
-            'student_requests'=>$studentRequests,
-          ]); 
-        
+        // 'team_requests' => $teamRequests,
+            'all_requests' => $results,
+        ]);
+
+
+
+            // return response()->json([
+            //     'team_requests'=>$teamRequests,
+            //    'student_requests'=>$results,
+            //   ]); 
+            
     }//done with test ddd 
 
     

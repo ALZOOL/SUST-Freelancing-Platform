@@ -735,7 +735,7 @@ class StudentController extends Controller
         $student->team_id= $team->team_id;;
         $student->save();
 
-        return response()->json(['error' => "Team create successfully "], 422);
+        return response()->json(['ok' => "Team create successfully "], 422);
 
 
     }//done
@@ -770,6 +770,8 @@ class StudentController extends Controller
         $team->users()->attach($student_id,['team_id'=>$team->team_id]);
         $student->team_id= $team->team_id;;
         $student->save();
+
+        return response()->json(['ok' => "Seccessfuly join to team ."], 422);
 
     }//done //add vervication for checking if not valid return respone 
     
