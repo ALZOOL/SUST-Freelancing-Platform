@@ -73,6 +73,7 @@ class ClientController extends Controller
             $Authorization = Str::random(40);
             // Update the client's cookie_value field with the generated value
             $client->Authorization = $Authorization;
+            $client->last_login_at = now();
             $client->save();
 
             return response()->json([

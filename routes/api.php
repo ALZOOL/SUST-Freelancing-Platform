@@ -135,6 +135,7 @@ Route::controller(ManagerController::class)->group(function(){
     Route::post('manager/project_request/reject',"reject_project_request")->name('project_request.reject');
     //APPROVED PROJECTS
     Route::get('manager/Approved_projects',"show_accepted_requests")->name('/approved_projects');
+    Route::get('manager/Clients_projects',"show_clients_projects")->name('/approved_projects');
     Route::post('manager/publish',"publish")->name('publish');
     Route::post('manager/publish/cancel',"cancel_publish")->name('publish.cancel');
     Route::PUT('manager/update_status',"update_status")->name('status.update');
@@ -173,10 +174,9 @@ Route::controller(ManagerController::class)->group(function(){
     //Route::PUTmanager('/rank.upgrade/{id}/{next_rank}');
 //38 routes until here
     //TEAM REQUESTS AND TEAMS JOINING
-    // Route::get('manager/Team_requests/accepted',"accepted_team_requests")->name('/team_requests');
-    ///ddd
-    //Route::get('manager/team_join_projects',"team_join_projects")->name('team_join_projects');
-    
+    Route::get('manager/Team_requests/accepte',"accepted_team_requests")->name('/team_requests');
+    Route::get('manager/team_join_projects',"team_join_projects")->name('team_join_projects');
+    //show requests to join projects
     Route::get('manager/join_project_requests',"join_project_requests")->name('/team_requests');
    
     Route::post('manager/add_student_to_project',"add_student_to_project")->name('add_student_to_project');
