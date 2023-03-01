@@ -935,11 +935,11 @@ class ManagerController extends Controller
          }
          //###### auth logout function end
 
-
-        $users = DB::select('select * from tasks');
+        
+        $users =    DB::table('tasks')->get();
        
         return response()->json([
-            $users
+            'Tasks'=>$users,
         ]); 
     }//done with test ddd  
     //ADD NEW TASK 
