@@ -1196,7 +1196,7 @@ class ManagerController extends Controller
              return response()->json(['error' => 'Invalid token'], 401);
          }
          
-         //###### auth logout function end //
+         //###### auth logout function end 
         $users = DB::table('student_ranks')->where('student_id', '=', $request->student_id)->value('points');
         $x = $users;
         $y=$request->custom_points;
