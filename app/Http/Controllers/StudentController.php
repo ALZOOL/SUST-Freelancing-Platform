@@ -39,7 +39,6 @@ class StudentController extends Controller
             'last_name' => 'required',
             'username' => 'required|unique:students',
             'email' => 'required|unique:students',
-            'role' => 'required',
             'password' => 'required',
             'password_confirm' => 'required|same:password',
         ]);
@@ -48,7 +47,6 @@ class StudentController extends Controller
             'last_name' => $request->last_name,
             'username' => $request->username,
             'email' => $request->email,
-            'role' => $request->role,
             'password' => Hash::make($request->password),
         ]);
         $Student->save();
@@ -155,6 +153,7 @@ class StudentController extends Controller
         if (!$student) {
             return response()->json(['error' => 'Invalid token'], 401);
         }
+        $alreadysend=DB::table('interview_requests')->where('status','requested')->where('student_id',$request->student_id)->count();
         $student_id = $student->student_id;
         //$id = Auth::guard('student')->user()->student_id ;//get user id from currunt session 
         $user = DB::table('students')->where('student_id', $student_id)->first();
@@ -164,13 +163,16 @@ class StudentController extends Controller
         $next_start_points=$student_global_next_rank->start_points;
         $next_end_points=$student_global_next_rank->end_points;
         $stars_count= Star::where('student_id', $student_id)->count();
-    
+        //return $alreadysend ;
         $current_points = $user_rank->points;
     
             if ($current_points >= $next_start_points && $current_points <= 300) {
                 $current_rank = $student_global_next_rank->rank;
                 DB::update('update student_ranks set rank = ? where student_id= ?', [$current_rank, $student_id]);
                 return response()->json(['ok' => "Rank Upgrade Successfully "], 200);
+            }
+            elseif($alreadysend!=0){
+                return response()->json(['ok' => "you alrady sent request to upgrade "], 200);
             }
             elseif ($current_points >= 301) {//requst go to manager 
                 if ($stars_count >= 7 && $current_points>=1301) {

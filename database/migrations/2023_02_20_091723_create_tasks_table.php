@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('level');
             $table->string('category');
             $table->string('description');
-            $table->string('file_path');
+            $table->string('file_path')->nullable();
             $table->char('rank',3);
             $table->string('points');
             $table->timestamps();   
