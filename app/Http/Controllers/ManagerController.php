@@ -1431,6 +1431,17 @@ class ManagerController extends Controller
             ->join('students', 'student_join_projects.student_id', '=', 'students.student_id')
             ->join('student_ranks', 'students.student_id', '=', 'student_ranks.student_id')
             ->join('clients', 'student_join_projects.client_id', '=', 'clients.client_id')
+            ->select('students.student_id'
+            ,'students.first_name',
+            'students.last_name',
+            'students.role','student_ranks.student_id',
+            'student_join_projects.project_id',
+            'student_join_projects.project_title',
+            'clients.email',
+            'student_ranks.rank',
+            'student_join_projects.id',
+
+            )
             ->orderBy('student_join_projects.id')
             ->get()
             ->groupBy('project_id');
@@ -1438,6 +1449,7 @@ class ManagerController extends Controller
         $results = [];
         foreach ($studentRequests as $projectId => $requests) {
             $project = [
+                'id' => $requests->first()->id,
                 'project_id' => $projectId,
                 'title' => $requests->first()->project_title,
                 'client_email' => $requests->first()->email,
@@ -1448,12 +1460,14 @@ class ManagerController extends Controller
 
             foreach ($requests as $request) {
                 $student = [
-                    'project_id' => $request->project_id,
+                    //'project_id' => $request->project_id,
                     'student_id' => $request->student_id,
                     'first_name' => $request->first_name,
                     'last_name' => $request->last_name,
+                    'role' => $request->role,
                     'rank' => $request->rank,
-                    // add more fields as needed
+
+                    // add more fields as needed///
                 ];
 
                 $project['student_requests'][] = $student;
@@ -1551,12 +1565,14 @@ public function add_student_to_project(Request $request)
     $teamMember->team_id = $team->id;
     $teamMember->student_id = $student->student_id;
     $teamMember->save();
+    DB::table('student_join_projects')->where('id',$request->id)->delete();    
     $newteamMembers = ProjectsTeamMember::where('team_id', $project->team_id)->get();
     $newcurrentTeamCount = $newteamMembers->count();
     if($newcurrentTeamCount== $teamCount){
         $project->start_date = now();
         $project->save();
     }
+
 
     return response()->json([
         'message' => 'Student added to the project team successfully',
@@ -1619,7 +1635,9 @@ public function add_team_to_project(Request $request)
             $projectsTeamMember->team_id = $team->id;
             $projectsTeamMember->student_id = $team_member->student_id;
             $projectsTeamMember->save();
+            
         }
+        DB::table('team_join_projects')->where('id',$request->id)->delete();
 
         // Update the project with the team id
         $project->team_id = $team->id;
