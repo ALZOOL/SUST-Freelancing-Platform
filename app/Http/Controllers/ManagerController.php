@@ -1586,6 +1586,24 @@ public function add_student_to_project(Request $request)
 ///end of add single student to projetc with create team ;;;;; 
 
 ///start of add a team or accept a team to project
+//REJECT STUDENTS REQUESTS TO JOIN PROJECTS
+public function reject_student_request_project(Request $request){
+
+    //###### auth user logout function start
+   $Authorization = $request->header('Authorization');
+   if (!$Authorization) {
+       return response()->json(['error' => 'Unauthorized'], 401);
+   }
+   $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+   if (!$manager) {
+       return response()->json(['error' => 'Invalid token'], 401);
+   }
+   //###### auth logout function end    
+   DB::table('student_join_projects')->where('id',$request->id)->delete();
+    
+}//done with test ddd 
+
+//###################
 
 
 public function add_team_to_project(Request $request)
@@ -1652,6 +1670,26 @@ public function add_team_to_project(Request $request)
         'team_id' => $team->id,
     ], 201);
 }//done with test ddd 
+
+//REJECT TEAMS REQUESTS TO JOIN PROJECTS
+public function re1ject_team_request_project(Request $request){
+
+    //###### auth user logout function start
+   $Authorization = $request->header('Authorization');
+   if (!$Authorization) {
+       return response()->json(['error' => 'Unauthorized'], 401);
+   }
+   $manager = Manager::where('Authorization', $Authorization)->where('role', 'manager')->first();
+   if (!$manager) {
+       return response()->json(['error' => 'Invalid token'], 401);
+   }
+   //###### auth logout function end    
+   DB::table('team_join_projects')->where('id',$request->id)->delete();
+    
+}//done with test ddd 
+
+//###################
+
 
 public function show_contact_us(Request $request){
 

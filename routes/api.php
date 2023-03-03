@@ -180,7 +180,9 @@ Route::controller(ManagerController::class)->group(function(){
     Route::get('manager/join_project_requests',"join_project_requests")->name('/team_requests');
    
     Route::post('manager/add_student_to_project',"add_student_to_project")->name('add_student_to_project');
+    Route::post('manager/student_to_project/reject',"reject_student_request_project");
     Route::post('manager/add_team_to_project',"add_team_to_project")->name('add_team_to_project');
+    Route::post('manager/team_to_project/reject',"reject_team_request_project");
     Route::get('manager/show_contact_us',"show_contact_us")->name('/show_contact_us');
     
     
