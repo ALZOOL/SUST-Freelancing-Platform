@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ClientProjectRequest;
 use App\Models\Client_projects;
 use App\Models\ContactUs;
+use App\Models\Manager;
+use App\Models\ProjectsTeam;
 use App\Models\Star;
 use App\Models\ProjectsTeamMember;
 use App\Models\Student;
@@ -139,6 +141,8 @@ public function getProjectsAndTeams() {
     $data = [];
     foreach ($client_projects as $project) {
         $team_members = ProjectsTeamMember::where('team_id', $project->team_id)->get();
+        $team_leader = ProjectsTeam::where('id', $project->team_id)->first();
+
         $team_members_data = [];
         foreach ($team_members as $team_member) {
             $student = Student::find($team_member->student_id);
@@ -150,8 +154,18 @@ public function getProjectsAndTeams() {
                 // add more fields as needed
             ];
         }
+        $team_leader_data = null;
+        if ($team_leader) {
+            $team_leader_data = $team_leader->manager_id;
+            $manager = Manager::find($team_leader_data);
+            $mfirstname=$manager->first_name;
+            $mlastname=$manager->last_name;
+            $memail=$manager->email;
 
+        }
+       
         $data[] = [
+            'project_id' => $project->id,
             'project_title' => $project->title,
             'project_category' => $project->category,
             'project_description' => $project->description,
@@ -164,6 +178,10 @@ public function getProjectsAndTeams() {
             'project_web_security' => $project->web_security,
             'project_team_count' => $project->team_count,
             'team_id' => $project->team_id,
+            'start_date' => $project->start_date,
+            'manager_first_name'=> $mfirstname,
+            'manager_last_name'=> $mlastname,
+            'manager_email'=>$memail,
             'team_members' => $team_members_data
         ];
     }
@@ -267,6 +285,32 @@ public function contacts_us()
     ]);
 }
 
+public function checkstar(Request $request){
+    $Authorization = request()->header('Authorization');
+    if (!$Authorization) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    $client = Client::where('Authorization', $Authorization)->first();
+    // Validate authorization token with client guard
+    if (!$client) {
+        return response()->json(['error' => 'Invalid token'], 401);
+    }   
+    if (!$request->project_id) {
+        return response()->json(['error' => 'no project selected'], 401);
+    }
+    $existing_star = Star::where('client_id', $client->client_id)
+    ->where('project_id', $request->project_id)
+    ->first();
+
+    if ($existing_star) {
+    return response()->json("true");
+    }
+    else{
+    return response()->json("false");
+
+    }
+
+}
 
 public function stars(Request $request){
     $Authorization = request()->header('Authorization');
@@ -283,7 +327,7 @@ public function stars(Request $request){
 
     // Check if the client has already given a star to this team
     $existing_star = Star::where('client_id', $client_id)
-                          ->where('team_id', $request->team_id)
+                          ->where('project_id', $request->project_id)
                           ->first();
     if ($existing_star) {
         return response()->json(['error' => "You have already given a star to this team."], 422);

@@ -1493,7 +1493,7 @@ class ManagerController extends Controller
         }
 
         return response()->json([
-        // 'team_requests' => $teamRequests,
+        //'team_requests' => $teamRequests,
             'all_requests' => $results,
         ]);
 
@@ -1672,7 +1672,7 @@ public function add_team_to_project(Request $request)
 }//done with test ddd 
 
 //REJECT TEAMS REQUESTS TO JOIN PROJECTS
-public function re1ject_team_request_project(Request $request){
+public function reject_team_request_project(Request $request){
 
     //###### auth user logout function start
    $Authorization = $request->header('Authorization');

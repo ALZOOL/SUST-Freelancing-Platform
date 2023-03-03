@@ -89,7 +89,9 @@ Route::middleware(['throttle:api'])->group(function () {
     Route::post('client/stars_store', 'stars')->name('stars.store');
     Route::get('client/notifications', 'notifications')->name('notifications');
     Route::put('client/changeinfo', 'changeinfo')->name('changeinfo');
-
+    Route::post('client/checkstar', 'checkstar')->name('checkstar');
+    
+    
     
 
     
