@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\ClientProjectRequest;
@@ -191,19 +192,22 @@ public function client_project_requets(Request $request)
     $request->validate([
         'project_title' => 'required',
         'project_description' => 'required',
-        'project_file' => 'nullable|file|mimes:pdf'
+        'project_file' => 'nullable|file'
     ]);
 
     $path = null;
     if ($request->hasFile('project_file')) {
-        $path = $request->file('project_file')->store('uploads');
+        $path = $request->file('project_file')->store('uploads/clientprojectrequest');
+        $url = url('/').'/'.$path;
+                //$absoluetePath= Storage::path($path);
     }
 
     $projectRequest = new ClientProjectRequest;
     $projectRequest->client_id = $id;
     $projectRequest->project_title = $request->project_title;
     $projectRequest->project_description = $request->project_description;
-    $projectRequest->project_file_path = $path;
+    $projectRequest->project_file_path = $url;
+    $projectRequest->status = 'requested';
     $projectRequest->save();
 
     return response()->json(['ok' => "Project request submitted successfully."], 200);

@@ -958,8 +958,8 @@ class ManagerController extends Controller
         }
         //###### auth logout function end
         $path = null;
-        if ($request->hasFile('project_file')) {
-            $path = $request->file('project_file')->store('tasks/uploads');
+        if ($request->hasFile('file_path')) {
+            $path = $request->file('file_path')->store('tasks/uploads');
         }
 
         $request->validate([
@@ -1094,18 +1094,19 @@ class ManagerController extends Controller
         'student_solved_tasks.id',
         'student_solved_tasks.task_id',
         'tasks.title',
+        'tasks.level',
         'student_solved_tasks.category',
         'students.student_id',
         'students.username',
         'student_solved_tasks.report',
-        'student_solved_tasks.file_path',
+        'student_solved_tasks.solution',
         'tasks.points'
         )
         ->where('student_solved_tasks.category', '=', 'web_development')->whereNull('student_solved_tasks.points')->get();
         
         //return $users;
         return response()->json([
-            $users
+            'tasks'=>$users
          ]); 
     }//done with test ddd  
     
@@ -1132,16 +1133,17 @@ class ManagerController extends Controller
        'student_solved_tasks.id',
        'student_solved_tasks.task_id',
        'tasks.title',
+       'tasks.level',
        'student_solved_tasks.category',
        'students.student_id','students.username',
        'student_solved_tasks.report',
-       'student_solved_tasks.file_path',
+       'student_solved_tasks.solution',
        'tasks.points'
        )
        ->where('student_solved_tasks.category', '=', 'web_security')->whereNull('student_solved_tasks.points')->get();
        //return $users;
        return response()->json([
-        $users
+        'tasks'=>$users
      ]); 
     } //done with test ddd  
     
@@ -1167,6 +1169,7 @@ class ManagerController extends Controller
        'student_solved_tasks.id',
        'student_solved_tasks.task_id',
        'tasks.title',
+       'tasks.level',
        'student_solved_tasks.category',
        'students.student_id','students.username',
        'student_solved_tasks.file_path',
@@ -1175,7 +1178,7 @@ class ManagerController extends Controller
        ->where('student_solved_tasks.category', '=', 'ui_ux')->whereNull('student_solved_tasks.points')->get();
 
        return response()->json([
-        $users
+        'tasks'=>$users
      ]); 
     } //done with test ddd  
 
