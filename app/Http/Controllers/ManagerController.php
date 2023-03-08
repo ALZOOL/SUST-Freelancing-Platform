@@ -959,7 +959,8 @@ class ManagerController extends Controller
         //###### auth logout function end
         $path = null;
         if ($request->hasFile('file_path')) {
-            $path = $request->file('file_path')->store('tasks/uploads');
+            $path = $request->file('file_path')->store('uploads/tasks');
+           // $full_path = storage_path('app/'.$path);
         }
 
         $request->validate([

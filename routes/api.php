@@ -32,6 +32,7 @@ Route::controller(StudentController::class)->group(function(){
     Route::get('student/calculateCategoryIndicators',  'calculateCategoryIndicators')->name('calculateCategoryIndicators');
     Route::get('student/roadmaps',  'roadmaps')->name('roadmaps');
     Route::get('student/get_team_members',  'get_team_members')->name('get_team_members');
+    Route::get('student/getinfo',  'getinfo')->name('getinfo');
 
     //rank:
     Route::get('student/rank', 'rank')->name('rank');

@@ -47,6 +47,7 @@ class StudentController extends Controller
             'last_name' => $request->last_name,
             'username' => $request->username,
             'email' => $request->email,
+            'role' => $request->role,
             'password' => Hash::make($request->password),
         ]);
         $Student->save();
@@ -117,6 +118,26 @@ class StudentController extends Controller
         return response()->json(['ok' => "logout successfully"], 200);
     }//done
 
+    public function getinfo(Request $request){
+
+        $Authorization = request()->header('Authorization');
+        if (!$Authorization) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        // Validate authorization token with client guard
+        $student = Student::where('Authorization', $Authorization)->first();
+        if (!$student) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        $student_id = $student->student_id;
+
+        $studentinfo = Student::where('student_id',$student_id)->select('first_name', 'last_name', 'username', 'email', 'avater','role','team_id')->first();
+        return response()->json([
+            'studentinfo'=>$studentinfo
+        ]);
+
+    }
+
 
 //  function that returnt rank and update rank from rank table based on seesion user_id 
     public function rank(){
@@ -130,17 +151,33 @@ class StudentController extends Controller
             return response()->json(['error' => 'Invalid token'], 401);
         }
         $student_id = $student->student_id;
-        $rank = DB::table('student_ranks')->where('student_id', $student_id)->get();
-        foreach ($rank as $student_rank) {
+        $student_rank = DB::table('student_ranks')->where('student_id', $student_id)->first();
+
+        ######mahdi-next-point#########
+        $globalRank = DB::table('global_ranks')->where('rank', $student_rank->rank)->first();
+        $nextGlobalRank = $globalRank->id + 1;
+        $nextRank = DB::table('global_ranks')->where('id', $nextGlobalRank)->first();
+        if (!$nextRank) {
+            return null;
+        }
+        $pointsToNextRank = $nextRank->start_points - $student_rank->points;
+        $totalPointsNeeded = $nextRank->start_points - $globalRank->start_points;
+        $percentageToNextRank = ($totalPointsNeeded - $pointsToNextRank) / $totalPointsNeeded * 100;
+        if ($percentageToNextRank < 1) {
+            $percentageToNextRank = 1;
+        }
+        ########mahfi-next-points#######
+
         return response()->json([
                 'attributes'=>[
                     'student_id'=>$student_rank->student_id,
                     'points'=>$student_rank->points,
                     'rank'=>$student_rank->rank,
+                    'pointsToNextRank' => $pointsToNextRank,
+                    'percentageToNextRank' => $percentageToNextRank,
             ]
                 ]);
         
-         }
     }//done
     public function upgrade_rank(Request $request){
 
@@ -153,7 +190,6 @@ class StudentController extends Controller
         if (!$student) {
             return response()->json(['error' => 'Invalid token'], 401);
         }
-        $alreadysend=DB::table('interview_requests')->where('status','requested')->where('student_id',$request->student_id)->count();
         $student_id = $student->student_id;
         //$id = Auth::guard('student')->user()->student_id ;//get user id from currunt session 
         $user = DB::table('students')->where('student_id', $student_id)->first();
@@ -163,16 +199,13 @@ class StudentController extends Controller
         $next_start_points=$student_global_next_rank->start_points;
         $next_end_points=$student_global_next_rank->end_points;
         $stars_count= Star::where('student_id', $student_id)->count();
-        //return $alreadysend ;
+    
         $current_points = $user_rank->points;
     
             if ($current_points >= $next_start_points && $current_points <= 300) {
                 $current_rank = $student_global_next_rank->rank;
                 DB::update('update student_ranks set rank = ? where student_id= ?', [$current_rank, $student_id]);
                 return response()->json(['ok' => "Rank Upgrade Successfully "], 200);
-            }
-            elseif($alreadysend!=0){
-                return response()->json(['ok' => "you alrady sent request to upgrade "], 200);
             }
             elseif ($current_points >= 301) {//requst go to manager 
                 if ($stars_count >= 7 && $current_points>=1301) {
@@ -417,6 +450,7 @@ class StudentController extends Controller
         return view('student/submit_task', $data);
     }// just view 
 
+
     public function submitTask(Request $request){
         $Authorization = request()->header('Authorization');
         if (!$Authorization) {
@@ -432,7 +466,7 @@ class StudentController extends Controller
         $orginal_task = Task::where('id', $task_id)->first();
         $category = $orginal_task->category;
         $level = $orginal_task->level;
-        $solution = $request->solution;;
+       // $solution = $request->solution;
         $report = $orginal_task->report;
         $file_path = '';
         // check if file was uploaded
@@ -446,13 +480,13 @@ class StudentController extends Controller
             ->first();
 
         if ($submitted_task) {
-            return response()->json(['error' => "You already sumbit the task "], 400);
+            return response()->json(['error' => "solved"], 200);
         }
         // save task to student_solved_tasks table
         $task = new StudentSolvedTask();
         //echo $request->student_id;
         // check category and level to determine solution/report
-        if ($category == 'ui/ux') {
+        if ($category == 'ui_ux') {
             // no solution/report needed
             $task->task_id = $task_id;
             $task->student_id = $student_id;
@@ -462,14 +496,14 @@ class StudentController extends Controller
             return response()->json(['ok' => "Task upload successfully "], 200);
         } elseif ($category == 'web_security') {
             if ($level == 'easy') {
-                $task->solution = $solution;
+                $task->solution = $request->solution;
                 $task_solution = TaskSolution::where('task_id', $task_id)->first();
 
-                if ($task_solution->solution == $solution) {
+                if ($task_solution && $task_solution->solution == $request->solution) {
                     $task->task_id = $task_id;
                     $task->student_id = $student_id;
                     $task->category= $category;
-                    $task->solution = $solution;
+                    $task->solution = $request->solution;
                     $task->file_path = $file_path;
                     $task->points = $orginal_task->points;
                     $task->save();
@@ -478,11 +512,11 @@ class StudentController extends Controller
                     $rank->points += $orginal_task->points;
                     $rank->save();
 
-                    return response()->json(['ok' => "congrats you solved it"], 200);
+                return response()->json(['ok' => "congrats you solved it"], 200);
                 } else {
-                    return response()->json(['error' => "Incorrect solution"], 400);
+                    return response()->json(['ok' => "Incorrect solution"], 200);
                 }
-            } else {//for medim and hard security task
+            } elseif($level == 'medium' || $level == 'hard') {//for medim and hard security task
                 $task->task_id = $task_id;
                 $task->student_id = $student_id;
                 $task->category= $category;
@@ -491,13 +525,13 @@ class StudentController extends Controller
             }
         } else { // web_development
             if ($level == 'easy') {
-                $task->solution = $solution;
+                $task->solution = $request->solution;
                 $task_solution = TaskSolution::where('task_id', $task_id)->first();
-                if ($task_solution->solution == $solution) {
+                if ($task_solution && $task_solution->solution == $request->solution) {
                     $task->task_id = $task_id;
                     $task->student_id = $student_id;
                     $task->category= $category;
-                    $task->solution = $solution;
+                    $task->solution = $request->solution;
                     $task->file_path = $file_path;
                     $task->points = $orginal_task->points;
                     $task->save();
@@ -505,10 +539,10 @@ class StudentController extends Controller
                     $rank = StudentRank::where('student_id', $student_id)->first();
                     $rank->points += $orginal_task->points;
                     $rank->save();
-                    return response()->json(['ok' => "congrats you solev it  "], 200);
+                    return response()->json(['ok' => "correct"], 200);
                 }
                 else {
-                        return response()->json(['error' => "Incorrect solution"], 400);
+                        return response()->json(['ok' => "wrong"], 200);
                      }
             }
             else{
@@ -563,7 +597,7 @@ class StudentController extends Controller
                 'frontend'=>$project->frontend,
                 'backend'=>$project->backend,
                 'ui_ux'=>$project->ui_ux,
-                'security'=>$project->security,
+                'web_security'=>$project->web_security,
             ];
         }
         return response()->json([
@@ -595,7 +629,7 @@ class StudentController extends Controller
                                                 ->where('student_id', $student_id)
                                                 ->first();
         if ($existing_request) {
-            return response()->json(['error' => "You have already sent a request to join this project."], 400);
+            return response()->json(['ok' => "sent"], 200);
         }
     
         if ($project_rank->start_points<=$userpoint){
@@ -608,9 +642,9 @@ class StudentController extends Controller
                 'student_role'=>$user->role
             ]);
             $request->save();
-            return response()->json(['ok' => "request send successfully  "], 200);
+            return response()->json(['ok' => "done"], 200);
         } else {
-            return response()->json(['ok' => "you cant join to this project keep rocking until you be able to join   "], 200);
+            return response()->json(['ok' => "Not Allowed"], 200);
         }
     }//done 
     
@@ -636,9 +670,9 @@ class StudentController extends Controller
         $team_leader = DB::table('teams')->where('team_leader', $student_id)->exists();
  
         if (!$team) {
-            return response()->json(['error' => "You have not created a team. Please create a team first"], 403);
+            return response()->json(['ok' => "No Team"], 200);
         } elseif (!$team_leader) {
-            return response()->json(['error' => "You are not the team leader. Only the team leader can send requests."], 403);
+            return response()->json(['ok' => "No Team Leader"], 200);
         }
 
         // Check if the team has already sent a request to join this project
@@ -648,7 +682,7 @@ class StudentController extends Controller
                                 ->first();
 
         if ($team_join_project) {
-            return response()->json(['error' => "You have already sent a request to join this project"], 403);
+            return response()->json(['ok' => "sent"], 200);
         }
  
         $request = TeamJoinProject::create([
@@ -657,7 +691,7 @@ class StudentController extends Controller
             'team_id' => $team->team_id,
         ]);
  
-        return response()->json(['ok' => "Your request has been sent successfully"], 200);
+        return response()->json(['ok' => "applied"], 200);
     }//done
  
 //end of user request to join to project 
@@ -678,17 +712,30 @@ class StudentController extends Controller
         if (!$student) {
             return response()->json(['error' => 'Invalid token'], 401);
         }
+        $team = Team::where('team_id', $student->team_id)->first();
+        if(!$team){
+            return response()->json("you dont have team yet ");
+        }
         $student_id = $student->student_id;
         $team_leader = Team::where('team_leader', $student_id)->exists();
 
+        $team_name = Team::where('teams.team_id', $student->team_id)->first();
+    
         $team_members = StudentTeam::where('student_teams.team_id', $student->team_id)
                 ->join('students', 'student_teams.student_id', '=', 'students.student_id')
-                ->join('student_ranks','student_ranks.student_id','=','students.student_id'  )
-                ->get(['students.student_id', 'students.username', 'students.role','student_ranks.rank']);
-
+                ->join('student_ranks','student_ranks.student_id','=','students.student_id')
+                ->leftJoin('teams', 'teams.team_leader', '=', 'students.student_id')
+                ->get(['students.student_id', 'students.username', 'students.role', 'student_ranks.rank', 'teams.team_leader']);
+    
+        foreach ($team_members as $member) {
+            $member->team_leader = $member->team_leader == $student_id;
+        }
+    
         return response()->json([
-            'team_members' => $team_members,
-            'team_leader'=>$team_leader
+            'invation_link'=>$team->invitation_link,
+            'team_name'=>$team_name->team_name ,
+            'team_leader' => $team_leader,
+            'team_members' => $team_members
         ]);
     }//done with team leader value 
 
@@ -735,7 +782,7 @@ class StudentController extends Controller
         $student->team_id= $team->team_id;;
         $student->save();
 
-        return response()->json(['ok' => "Team create successfully "], 422);
+        return response()->json(['error' => "Team create successfully "], 422);
 
 
     }//done
@@ -770,8 +817,8 @@ class StudentController extends Controller
         $team->users()->attach($student_id,['team_id'=>$team->team_id]);
         $student->team_id= $team->team_id;;
         $student->save();
+        return response()->json(['ok' => "you join team seccssfuly "], 200);
 
-        return response()->json(['ok' => "Seccessfuly join to team ."], 422);
 
     }//done //add vervication for checking if not valid return respone 
     
@@ -942,8 +989,8 @@ class StudentController extends Controller
         if ($request->filled('email')) {
             $student->email = $request->input('email');
         }
-        if ($request->filled('avatar')) {
-            $student->avatar = $request->input('avatar');
+        if ($request->filled('avater')) {
+            $student->avater = $request->input('avater');
         }
         if ($request->filled('role')) {
             $student->role = $request->input('role');

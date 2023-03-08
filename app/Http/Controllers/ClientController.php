@@ -215,8 +215,8 @@ public function client_project_requets(Request $request)
 
     $path = null;
     if ($request->hasFile('project_file')) {
-        $path = $request->file('project_file')->store('uploads/clientprojectrequest');
-        $url = url('/').'/'.$path;
+        $path = $request->file('project_file')->store('uploads/client/projectrequest');
+       // $full_path = storage_path('app/'.$path);
                 //$absoluetePath= Storage::path($path);
     }
 
@@ -224,7 +224,7 @@ public function client_project_requets(Request $request)
     $projectRequest->client_id = $id;
     $projectRequest->project_title = $request->project_title;
     $projectRequest->project_description = $request->project_description;
-    $projectRequest->project_file_path = $url;
+    $projectRequest->project_file_path = $path;
     $projectRequest->status = 'requested';
     $projectRequest->save();
 
