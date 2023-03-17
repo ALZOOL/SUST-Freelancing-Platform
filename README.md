@@ -5,4 +5,4 @@ Created and developed with PHP Lravael & Vue.js & javascript.
 
 In the view folder there are some html pages that just used for some tetsing before adding the full code with user interface but the full test tested using postman with APIs.
 
-here is the User Interface  repository link on github https://github.com/Alzekri/-freelancing.git
+here is the User Interface  repository link on github https://github.com/Alzekri/-freelancing
