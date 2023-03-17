@@ -601,21 +601,6 @@ class ManagerController extends Controller
         //for showing accepted clients projects
        // $teams = DB::select('select * from projects_teams');
 
-       // echo $users;
-        //return response()->json($users);
-        // $ys= DB::table('students')->where('student_id',$team->student_id)->get();    
-        // $students = Student::all()->toArray();
-        // $records = Model::where('column', 'value')->get()->toArray();
-        // foreach($teams as $team){
-        //     //$x=$team->student_id;
-        //     $ys= DB::table('students')->where('student_id',$team->student_id)->get();
-        //     $students = DB::table('users')->where('id', 1)->value('name');
-        //     //$students = Student::where('student_id', $team->student_id)->get()->toArray();
-        //     return view('manager.approved_projects')
-        //     ->with(compact('users'))
-        //     ->with(compact('ys'))
-        //     ->with(compact('projects'));
-        // }
 
         return response()->json([
             'approved projects' => $users,
@@ -1723,66 +1708,5 @@ public function show_contact_us(Request $request){
 
 ////end of team join project 
 
-
-        //mahdi farfra
-
-    //ACCEPT-TEAM
-    //single student
-    
-    //#######################################
-    
-
-    //full team
-    //#######################################
-
-//     //
-//     public function create_team_action(Request $request){
-//     $user = Auth::user();
-//     $manager_id = Auth::guard('manager')->user()->student_id;
-//     $teams = DB::table('projects_teams')->where('manager_id', $manager_id)->get();
-
-//     if (!$user) {
-//         return redirect()->intended('/')->with('fail', 'please login first ');
-//     }
-
-//     if ($teams->count() > 0) {
-//         return redirect()->intended('/')->with('fail', 'you are already a team member');
-//     }
-
-//     // $validatedData = $request->validate([
-//     //     'team_name' => 'required|unique:teams'
-//     // ]);
-//     $team = ProjectsTeam::create([
-//         //'invitation_link' => $invitation_link
-//     ]);
-//     $users = Auth()->id();
-//     $team->users()->attach($users);
-// }
-
-    //#################
-
-    // public function accept_team($id)
-    // {
-    //     $result = DB::table('student_join_projects')->where('id',$id)->first();
-    //     $data=new AcceptedTeam;
-    //     //$data->id=$result->id;
-    //     $data->project_id=$result->project_id;
-    //     $data->project_name=$result->project_name;
-    //     $data->client_id=$result->client_id;
-    //     $data->client_email=$result->client_email;
-    //     $data->student_id=$result->student_id;
-    //     $data->student_name=$result->student_name;
-    //     $data->student_role=$result->student_role;
-        
-    //     DB::table('student_join_projects')->where('id',$id)->delete();
-    //     $data->save();
-        
-    //     return back();
-    //     //return redirect()->back();
-    //     return view('test');
-    // }
-    // //#################
-
-    //**************************** */
 
 }
